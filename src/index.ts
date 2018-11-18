@@ -5,21 +5,20 @@ const client: Discord.Client = new Discord.Client();
 
 client.once('ready', () => console.log('Ready!'));
 
-client.on('message', (message: Discord.Message): void => {
-    if (message.content === '!channels') {
-        client.channels
-            .filter((channel: Discord.Channel) => channel.type === 'voice')
-            .forEach((channel: Discord.Channel) => {
-                message.channel.send(channel.id + ' | ' + channel.type);
-            });
-    }
-});
-
 client.on('voiceStateUpdate', (oldMember: Discord.GuildMember, newMember: Discord.GuildMember): void => {
-    if (oldMember.voiceChannel === undefined && newMember.voiceChannel !== undefined) {
-        console.log('A user has just joined channel ' + newMember.voiceChannelID);
-    } else if (newMember.voiceChannel === undefined) {
-        console.log('A user has just left channel ' + newMember.voiceChannelID);
+    const newVoiceChannel: Discord.VoiceChannel = newMember.voiceChannel;
+    const oldVoiceChannel: Discord.VoiceChannel = oldMember.voiceChannel;
+    
+    if (!!newVoiceChannel && newVoiceChannel.members.size > 0) {
+        newVoiceChannel.clone()
+            .then((clonedChannel: Discord.VoiceChannel) => {
+                clonedChannel.setParent(newVoiceChannel.parentID);
+            })
+            .catch((error: Error) => console.log(error));
+    }
+
+    if (oldVoiceChannel && oldVoiceChannel.members.size < 1) {
+        oldVoiceChannel.delete();
     }
 });
 
