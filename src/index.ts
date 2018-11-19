@@ -3,11 +3,15 @@ import { token } from './token';
 
 const client: Discord.Client = new Discord.Client();
 
-client.once('ready', () => console.log('Ready!'));
+const getVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildChannel> => {
+    return voiceChannel.guild.channels.filter((channel: Discord.VoiceChannel) => channel.name === voiceChannel.name && channel.id !== voiceChannel.id);
+};
 
 const getEmptyVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildChannel> => {
-    return voiceChannel.guild.channels.filter((channel: Discord.VoiceChannel) => channel.name === voiceChannel.name && channel.id !== voiceChannel.id && voiceChannel.members.size < 1);
-}
+    return getVoiceChannelClones(voiceChannel).filter((channel: Discord.VoiceChannel) => channel.members.size < 1);
+};
+
+client.once('ready', () => console.log('Ready!'));
 
 client.on('voiceStateUpdate', (oldMember: Discord.GuildMember, newMember: Discord.GuildMember): void => {
     const newVoiceChannel: Discord.VoiceChannel = newMember.voiceChannel;
