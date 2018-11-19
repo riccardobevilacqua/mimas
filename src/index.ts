@@ -22,7 +22,7 @@ client.on('voiceStateUpdate', (oldMember: Discord.GuildMember, newMember: Discor
             .catch((error: Error) => console.log(error));
     }
 
-    if (!!oldVoiceChannel && oldVoiceChannel.members.size < 1 && getEmptyVoiceChannelClones(oldVoiceChannel).size > 1) {
+    if (!!oldVoiceChannel && oldVoiceChannel.members.size < 1 && getEmptyVoiceChannelClones(oldVoiceChannel).size > 0) {
         oldVoiceChannel.delete();
     }
 });
