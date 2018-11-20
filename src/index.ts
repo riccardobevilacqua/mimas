@@ -4,7 +4,9 @@ import { token } from './token';
 const client: Discord.Client = new Discord.Client();
 
 const getVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildChannel> => {
-    return voiceChannel.guild.channels.filter((channel: Discord.VoiceChannel) => channel.name === voiceChannel.name && channel.id !== voiceChannel.id);
+    return voiceChannel.guild.channels
+        .filter((channel: Discord.GuildChannel) => channel.type === 'voice')
+        .filter((channel: Discord.VoiceChannel) => channel.name === voiceChannel.name && channel.id !== voiceChannel.id);
 };
 
 const getEmptyVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildChannel> => {
@@ -21,7 +23,10 @@ client.on('voiceStateUpdate', (oldMember: Discord.GuildMember, newMember: Discor
         newVoiceChannel.clone()
             .then((clonedChannel: Discord.VoiceChannel) => {
                 clonedChannel.setParent(newVoiceChannel.parentID);
-                clonedChannel.setUserLimit(newVoiceChannel.userLimit);
+                clonedChannel.edit({
+                    userLimit: newVoiceChannel.userLimit,
+                    position: newVoiceChannel.position
+                });
             })
             .catch((error: Error) => console.log(error));
     }
