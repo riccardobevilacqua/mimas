@@ -1,6 +1,7 @@
 import * as Discord from 'discord.js';
 import { token } from './token';
 
+let cloningLock = false;
 const client: Discord.Client = new Discord.Client();
 
 const getVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildChannel> => {
@@ -14,7 +15,8 @@ const getEmptyVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord
 };
 
 const cloneVoiceChannel = (voiceChannel: Discord.VoiceChannel) => {
-    if (!!voiceChannel && voiceChannel.members.size > 0 && getEmptyVoiceChannelClones(voiceChannel).size < 1) {
+    if (!!voiceChannel && voiceChannel.members.size > 0 && getEmptyVoiceChannelClones(voiceChannel).size < 1 && !cloningLock) {
+        cloningLock = true;
         voiceChannel.clone()
             .then((clonedChannel: Discord.VoiceChannel) => {
                 clonedChannel.setParent(voiceChannel.parentID);
@@ -23,6 +25,7 @@ const cloneVoiceChannel = (voiceChannel: Discord.VoiceChannel) => {
                     position: voiceChannel.position + 1
                 });
             })
+            .then(() => cloningLock = false)
             .catch((error: Error) => console.log(error));
     }
 };
