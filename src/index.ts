@@ -17,13 +17,9 @@ const getEmptyVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord
 };
 
 const hasCloningPermissions = (voiceChannel: Discord.VoiceChannel): boolean => {
-    const permissions: Discord.Permissions = voiceChannel.guild.member(client.user).permissions;
     let result = false;
 
-    console.log(permissions);
-    
-
-    if (permissions.has('MANAGE_CHANNELS')) {
+    if (voiceChannel.guild.member(client.user).permissions.has('MANAGE_CHANNELS')) {
         result = true;
     }
 
@@ -34,8 +30,6 @@ const cloneVoiceChannel = (voiceChannel: Discord.VoiceChannel) => {
     try {
         if (!!voiceChannel && voiceChannel.members.size > 0 && getEmptyVoiceChannelClones(voiceChannel).size < 1 && !cloningLock && hasCloningPermissions(voiceChannel)) {
             cloningLock = true;
-
-            
 
             voiceChannel.clone()
                 .then((clonedChannel: Discord.VoiceChannel) => {
