@@ -14,6 +14,21 @@ const getEmptyVoiceChannelClones = (voiceChannel: Eris.VoiceChannel): Eris.AnyGu
         .filter((channel: Eris.AnyGuildChannel) => (<Eris.VoiceChannel>channel).voiceMembers.size < 1);
 };
 
+const getClientMember = (guild: Eris.Guild): Eris.Member => {
+    return guild.members.find((member: Eris.Member) => member.user === client.user);
+}
+
+const hasCloningPermissions = (voiceChannel: Eris.VoiceChannel): boolean => {
+    const clientMember: Eris.Member = getClientMember(voiceChannel.guild);
+    let result = false;
+
+    if (voiceChannel.permissionsOf(clientMember.id).has('MANAGE_CHANNELS')) {
+        result = true;
+    }
+
+    return result;
+};
+
 client.on('ready', () => console.log('Ready!'));
 
 client.on('guildCreate', (guild: Eris.Guild) => {
