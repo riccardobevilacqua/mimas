@@ -1,80 +1,42 @@
-import * as Fetch from 'node-fetch';
-import * as Discord from 'discord.js';
+import * as Eris from 'eris';
 import { token } from './token';
-import { config } from './config';
 
-let cloningLock = false;
-const client: Discord.Client = new Discord.Client();
+const client: Eris.Client = new Eris.Client(token);
 
-const getVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildChannel> => {
+const getVoiceChannelClones = (voiceChannel: Eris.VoiceChannel): Eris.AnyGuildChannel[] => {
     return voiceChannel.guild.channels
-        .filter((channel: Discord.GuildChannel) => channel.type === 'voice')
-        .filter((channel: Discord.VoiceChannel) => channel.name === voiceChannel.name && channel.id !== voiceChannel.id);
+        .filter((channel: Eris.AnyGuildChannel) => channel.type === 2)
+        .filter((channel: Eris.AnyGuildChannel) => channel.name === voiceChannel.name && channel.id !== voiceChannel.id);
 };
 
-const getEmptyVoiceChannelClones = (voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildChannel> => {
-    return getVoiceChannelClones(voiceChannel).filter((channel: Discord.VoiceChannel) => channel.members.size < 1);
+const getEmptyVoiceChannelClones = (voiceChannel: Eris.VoiceChannel): Eris.AnyGuildChannel[] => {
+    return getVoiceChannelClones(voiceChannel)
+        .filter((channel: Eris.AnyGuildChannel) => (<Eris.VoiceChannel>channel).voiceMembers.size < 1);
 };
 
-const hasCloningPermissions = (voiceChannel: Discord.VoiceChannel): boolean => {
-    let result = false;
+client.on('ready', () => console.log('Ready!'));
 
-    if (voiceChannel.guild.member(client.user).permissions.has('MANAGE_CHANNELS')) {
-        result = true;
+client.on('guildCreate', (guild: Eris.Guild) => {
+    if (!guild.unavailable) {
+        console.log(`Mimas joined ${guild.name}`);
     }
+});
 
-    return result;
-};
-
-const cloneVoiceChannel = (voiceChannel: Discord.VoiceChannel) => {
+client.on('voiceStateUpdate', (member: Eris.Member, oldState: Eris.VoiceState): void => {
     try {
-        if (!!voiceChannel && voiceChannel.members.size > 0 && getEmptyVoiceChannelClones(voiceChannel).size < 1 && !cloningLock && hasCloningPermissions(voiceChannel)) {
-            cloningLock = true;
+        if (!!member.voiceState.channelID) {
+            const newVoiceChannel: Eris.VoiceChannel = <Eris.VoiceChannel>client.getChannel(member.voiceState.channelID);
+            const oldVoiceChannel: Eris.VoiceChannel = <Eris.VoiceChannel>client.getChannel(oldState.channelID);
 
-            voiceChannel.clone()
-                .then((clonedChannel: Discord.VoiceChannel) => {
-                    clonedChannel.setParent(voiceChannel.parentID);
-                    clonedChannel.edit({
-                        userLimit: voiceChannel.userLimit,
-                        position: voiceChannel.position
-                    });
-                })
-                .then(() => cloningLock = false)
-                .catch((error: Error) => console.log(error));
+            // cloneVoiceChannel(newVoiceChannel);
+
+            if (!!oldVoiceChannel && oldVoiceChannel.voiceMembers.size < 1 && getEmptyVoiceChannelClones(oldVoiceChannel).length > 0) {
+                oldVoiceChannel.delete();
+            }
         }
-    } catch (error) {
+    } catch(error) {
         console.log(error);
     }
-};
-
-client.on('message', (message: Discord.Message) => {
-    if (message.content === '!channels') {
-        message.guild.channels.forEach((channel: Discord.GuildChannel) => message.channel.send(`${channel.name} - ${channel.position}`));
-    }
 });
 
-client.on('guildCreate', (guild: Discord.Guild) => {
-    if (guild.available) {
-        console.log(`Mimas joined ${guild.name}`);
-        // guild.channels.filter((channel: Discord.Channel) => channel.type === 'voice')
-        //     .forEach((voiceChannel: Discord.GuildChannel) => {
-        //         voiceChannel.edit({position: (voiceChannel.position + 1) * 100});
-        //         console.log(`Channel: ${voiceChannel.name} Position: ${voiceChannel.position} Parent: ${voiceChannel.parent} ParentID: ${voiceChannel.parentID}`);
-        //     });
-    }
-});
-
-client.on('voiceStateUpdate', (oldMember: Discord.GuildMember, newMember: Discord.GuildMember): void => {
-    const newVoiceChannel: Discord.VoiceChannel = newMember.voiceChannel;
-    const oldVoiceChannel: Discord.VoiceChannel = oldMember.voiceChannel;
-    
-    cloneVoiceChannel(newVoiceChannel);
-
-    if (!!oldVoiceChannel && oldVoiceChannel.members.size < 1 && getEmptyVoiceChannelClones(oldVoiceChannel).size > 0) {
-        oldVoiceChannel.delete();
-    }
-});
-
-client.once('ready', () => console.log('Ready!'));
-
-client.login(token);
+client.connect();
