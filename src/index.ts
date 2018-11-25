@@ -1,14 +1,10 @@
 import * as Eris from 'eris';
 import { token } from './token';
+import { IGuildInfo } from './interfaces';
 import { getVoiceChannelClones, getEmptyVoiceChannelClones, hasCloningPermissions, getUserMember } from './util';
 
-interface GuildInfo {
-    id: string
-    channelLock: boolean
-};
-
 const client: Eris.Client = new Eris.Client(token);
-let guildList: GuildInfo[] = [];
+let guildList: IGuildInfo[] = [];
 
 const cloneVoiceChannel = (voiceChannel: Eris.VoiceChannel) => {
     try {
@@ -35,7 +31,7 @@ client.on('guildCreate', (guild: Eris.Guild) => {
     if (!guild.unavailable) {
         console.log(`Mimas joined ${guild.name}`);
 
-        if (guildList.findIndex((guildInfo: GuildInfo) => guildInfo.id === guild.id) === -1) {
+        if (guildList.findIndex((guildInfo: IGuildInfo) => guildInfo.id === guild.id) === -1) {
             guildList.push({
                 id: guild.id,
                 channelLock: false
@@ -45,12 +41,16 @@ client.on('guildCreate', (guild: Eris.Guild) => {
 });
 
 client.on('guildDelete', (guild: Eris.Guild) => {
-    const guildIndex: number = guildList.findIndex((guildInfo: GuildInfo) => guildInfo.id === guild.id);
-
-    console.log(`Mimas left ${guild.name}`);
+    try {
+        const guildIndex: number = guildList.findIndex((guildInfo: IGuildInfo) => guildInfo.id === guild.id);
     
-    if (guildIndex > -1) {
-        guildList.splice(guildIndex, 1);
+        console.log(`Mimas left ${guild.name}`);
+        
+        if (guildIndex > -1) {
+            guildList.splice(guildIndex, 1);
+        }
+    } catch(error) {
+        console.log(error);
     }
 });
 
