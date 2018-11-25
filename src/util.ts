@@ -1,14 +1,15 @@
 import * as Eris from 'eris';
 
-export function getVoiceChannelClones(voiceChannel: Eris.VoiceChannel): Eris.AnyGuildChannel[] {
-    return voiceChannel.guild.channels
-        .filter((channel: Eris.AnyGuildChannel) => channel.type === 2)
-        .filter((channel: Eris.AnyGuildChannel) => channel.name === voiceChannel.name && channel.id !== voiceChannel.id);
+export function getVoiceChannelClones(voiceChannel: Eris.VoiceChannel): Eris.VoiceChannel[] {
+    return <Eris.VoiceChannel[]>voiceChannel.guild.channels
+        .filter((channel: Eris.AnyGuildChannel) => {
+            return channel.type === 2 && channel.name === voiceChannel.name && channel.id !== voiceChannel.id
+        });
 };
 
-export function getEmptyVoiceChannelClones(voiceChannel: Eris.VoiceChannel): Eris.AnyGuildChannel[] {
+export function getEmptyVoiceChannelClones(voiceChannel: Eris.VoiceChannel): Eris.VoiceChannel[] {
     return getVoiceChannelClones(voiceChannel)
-        .filter((channel: Eris.AnyGuildChannel) => (<Eris.VoiceChannel>channel).voiceMembers.size < 1);
+        .filter((channel: Eris.VoiceChannel) => channel.voiceMembers.size < 1);
 };
 
 export function hasCloningPermissions(voiceChannel: Eris.VoiceChannel, user: Eris.User): boolean {
