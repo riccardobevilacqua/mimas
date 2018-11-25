@@ -1,39 +1,56 @@
 import * as Eris from 'eris';
 import { token } from './token';
+import { getVoiceChannelClones, getEmptyVoiceChannelClones, hasCloningPermissions, getUserMember } from './util';
+
+interface GuildInfo {
+    id: string
+    channelLock: boolean
+};
 
 const client: Eris.Client = new Eris.Client(token);
+let guildList: GuildInfo[] = [];
 
-const getVoiceChannelClones = (voiceChannel: Eris.VoiceChannel): Eris.AnyGuildChannel[] => {
-    return voiceChannel.guild.channels
-        .filter((channel: Eris.AnyGuildChannel) => channel.type === 2)
-        .filter((channel: Eris.AnyGuildChannel) => channel.name === voiceChannel.name && channel.id !== voiceChannel.id);
-};
+const cloneVoiceChannel = (voiceChannel: Eris.VoiceChannel) => {
+    try {
+        if (!!voiceChannel && voiceChannel.voiceMembers.size > 0 && getEmptyVoiceChannelClones(voiceChannel).length < 1 && !cloningLock && hasCloningPermissions(voiceChannel, client.user)) {
+            // cloningLock = true;
 
-const getEmptyVoiceChannelClones = (voiceChannel: Eris.VoiceChannel): Eris.AnyGuildChannel[] => {
-    return getVoiceChannelClones(voiceChannel)
-        .filter((channel: Eris.AnyGuildChannel) => (<Eris.VoiceChannel>channel).voiceMembers.size < 1);
-};
-
-const getClientMember = (guild: Eris.Guild): Eris.Member => {
-    return guild.members.find((member: Eris.Member) => member.user === client.user);
-}
-
-const hasCloningPermissions = (voiceChannel: Eris.VoiceChannel): boolean => {
-    const clientMember: Eris.Member = getClientMember(voiceChannel.guild);
-    let result = false;
-
-    if (voiceChannel.permissionsOf(clientMember.id).has('MANAGE_CHANNELS')) {
-        result = true;
+            // voiceChannel.clone()
+            //     .then((clonedChannel: Discord.VoiceChannel) => {
+            //         clonedChannel.setParent(voiceChannel.parentID);
+            //         clonedChannel.edit({
+            //             userLimit: voiceChannel.userLimit,
+            //             position: voiceChannel.position
+            //         });
+            //     })
+            //     .then(() => cloningLock = false)
+            //     .catch((error: Error) => console.log(error));
+        }
+    } catch (error) {
+        console.log(error);
     }
-
-    return result;
 };
-
-client.on('ready', () => console.log('Ready!'));
 
 client.on('guildCreate', (guild: Eris.Guild) => {
     if (!guild.unavailable) {
         console.log(`Mimas joined ${guild.name}`);
+
+        if (guildList.findIndex((guildInfo: GuildInfo) => guildInfo.id === guild.id) === -1) {
+            guildList.push({
+                id: guild.id,
+                channelLock: false
+            });
+        }
+    }
+});
+
+client.on('guildDelete', (guild: Eris.Guild) => {
+    const guildIndex: number = guildList.findIndex((guildInfo: GuildInfo) => guildInfo.id === guild.id);
+
+    console.log(`Mimas left ${guild.name}`);
+    
+    if (guildIndex > -1) {
+        guildList.splice(guildIndex, 1);
     }
 });
 
@@ -53,5 +70,7 @@ client.on('voiceStateUpdate', (member: Eris.Member, oldState: Eris.VoiceState): 
         console.log(error);
     }
 });
+
+client.on('ready', () => console.log('Ready!'));
 
 client.connect();
