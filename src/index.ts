@@ -29,17 +29,6 @@ const cloneVoiceChannel = (voiceChannel: Eris.VoiceChannel) => {
                     guildRegistry.toggleCloningLock(registeredGuild.id);
                 })
                 .catch((error) => console.log(error));
-            
-            // voiceChannel.guild
-            //     .createChannel(voiceChannel.name, '2', voiceChannel.parentID)
-            //     .then((channel: Eris.AnyGuildChannel) => {
-            //         (<Eris.VoiceChannel>channel).edit({userLimit: voiceChannel.userLimit});
-            //         // channel.editPosition(voiceChannel.position);
-            //     })
-            //     .then(() => {
-            //         guildRegistry.toggleCloningLock(registeredGuild.id);
-            //     })
-            //     .catch((error) => console.log(error));
         }
     } catch (error) {
         console.log(error);
