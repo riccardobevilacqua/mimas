@@ -8,19 +8,31 @@ let guildList: IGuildInfo[] = [];
 
 const cloneVoiceChannel = (voiceChannel: Eris.VoiceChannel) => {
     try {
-        if (!!voiceChannel && voiceChannel.voiceMembers.size > 0 && getEmptyVoiceChannelClones(voiceChannel).length < 1 && !cloningLock && hasCloningPermissions(voiceChannel, client.user)) {
-            // cloningLock = true;
+        let cloningLock: boolean = guildList.find((guildInfo: IGuildInfo) => guildInfo.id === voiceChannel.guild.id).cloningLock;
+        if (!!voiceChannel && voiceChannel.voiceMembers.size > 0 && getEmptyVoiceChannelClones(voiceChannel).length < 1 && hasCloningPermissions(voiceChannel, client.user) && !cloningLock) {
+            guildList.map((guildInfo: IGuildInfo) => {
+                if (guildInfo.id === voiceChannel.guild.id) {
+                    guildInfo.cloningLock = true;
+                }
 
-            // voiceChannel.clone()
-            //     .then((clonedChannel: Discord.VoiceChannel) => {
-            //         clonedChannel.setParent(voiceChannel.parentID);
-            //         clonedChannel.edit({
-            //             userLimit: voiceChannel.userLimit,
-            //             position: voiceChannel.position
-            //         });
-            //     })
-            //     .then(() => cloningLock = false)
-            //     .catch((error: Error) => console.log(error));
+                return guildInfo;
+            });
+            
+            voiceChannel.guild
+                .createChannel(voiceChannel.name, '2', voiceChannel.parentID)
+                .then((channel: Eris.AnyGuildChannel) => {
+                    channel.editPosition(voiceChannel.position);
+                })
+                .then(() => {
+                    guildList.map((guildInfo: IGuildInfo) => {
+                        if (guildInfo.id === voiceChannel.guild.id) {
+                            guildInfo.cloningLock = true;
+                        }
+        
+                        return guildInfo;
+                    });
+                })
+                .catch((error) => console.log(error));
         }
     } catch (error) {
         console.log(error);
@@ -34,7 +46,7 @@ client.on('guildCreate', (guild: Eris.Guild) => {
         if (guildList.findIndex((guildInfo: IGuildInfo) => guildInfo.id === guild.id) === -1) {
             guildList.push({
                 id: guild.id,
-                channelLock: false
+                cloningLock: false
             });
         }
     }
@@ -60,7 +72,7 @@ client.on('voiceStateUpdate', (member: Eris.Member, oldState: Eris.VoiceState): 
             const newVoiceChannel: Eris.VoiceChannel = <Eris.VoiceChannel>client.getChannel(member.voiceState.channelID);
             const oldVoiceChannel: Eris.VoiceChannel = <Eris.VoiceChannel>client.getChannel(oldState.channelID);
 
-            // cloneVoiceChannel(newVoiceChannel);
+            cloneVoiceChannel(newVoiceChannel);
 
             if (!!oldVoiceChannel && oldVoiceChannel.voiceMembers.size < 1 && getEmptyVoiceChannelClones(oldVoiceChannel).length > 0) {
                 oldVoiceChannel.delete();
