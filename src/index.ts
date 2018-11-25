@@ -1,83 +1,83 @@
 import * as Eris from 'eris';
 import { token } from './token';
 import { IGuildInfo } from './interfaces';
+import { GuildRegistry } from './guildRegistry';
 import { getVoiceChannelClones, getEmptyVoiceChannelClones, hasCloningPermissions, getUserMember } from './util';
 
 const client: Eris.Client = new Eris.Client(token);
-let guildList: IGuildInfo[] = [];
+const guildRegistry: GuildRegistry = new GuildRegistry();
 
 const cloneVoiceChannel = (voiceChannel: Eris.VoiceChannel) => {
     try {
-        let cloningLock: boolean = guildList.find((guildInfo: IGuildInfo) => guildInfo.id === voiceChannel.guild.id).cloningLock;
-        if (!!voiceChannel && voiceChannel.voiceMembers.size > 0 && getEmptyVoiceChannelClones(voiceChannel).length < 1 && hasCloningPermissions(voiceChannel, client.user) && !cloningLock) {
-            guildList.map((guildInfo: IGuildInfo) => {
-                if (guildInfo.id === voiceChannel.guild.id) {
-                    guildInfo.cloningLock = true;
-                }
+        guildRegistry.addGuild(voiceChannel.guild.id);
+        const registeredGuild = guildRegistry.findGuild(voiceChannel.guild.id);
+                
+        if (!!voiceChannel && voiceChannel.voiceMembers.size > 0 
+            && getEmptyVoiceChannelClones(voiceChannel).length < 1 
+            && hasCloningPermissions(voiceChannel, client.user) 
+            && !registeredGuild.cloningLock) {
+            guildRegistry.toggleCloningLock(registeredGuild.id);
 
-                return guildInfo;
-            });
-            
-            voiceChannel.guild
-                .createChannel(voiceChannel.name, '2', voiceChannel.parentID)
+            client.createChannel(registeredGuild.id, voiceChannel.name, 2, null, voiceChannel.parentID)
                 .then((channel: Eris.AnyGuildChannel) => {
-                    channel.editPosition(voiceChannel.position);
+                    (<Eris.VoiceChannel>channel).edit({
+                        userLimit: voiceChannel.userLimit
+                    });
+                    // channel.editPosition(voiceChannel.position);
                 })
                 .then(() => {
-                    guildList.map((guildInfo: IGuildInfo) => {
-                        if (guildInfo.id === voiceChannel.guild.id) {
-                            guildInfo.cloningLock = true;
-                        }
-        
-                        return guildInfo;
-                    });
+                    guildRegistry.toggleCloningLock(registeredGuild.id);
                 })
                 .catch((error) => console.log(error));
+            
+            // voiceChannel.guild
+            //     .createChannel(voiceChannel.name, '2', voiceChannel.parentID)
+            //     .then((channel: Eris.AnyGuildChannel) => {
+            //         (<Eris.VoiceChannel>channel).edit({userLimit: voiceChannel.userLimit});
+            //         // channel.editPosition(voiceChannel.position);
+            //     })
+            //     .then(() => {
+            //         guildRegistry.toggleCloningLock(registeredGuild.id);
+            //     })
+            //     .catch((error) => console.log(error));
         }
     } catch (error) {
         console.log(error);
     }
 };
 
-client.on('guildCreate', (guild: Eris.Guild) => {
-    if (!guild.unavailable) {
-        console.log(`Mimas joined ${guild.name}`);
-
-        if (guildList.findIndex((guildInfo: IGuildInfo) => guildInfo.id === guild.id) === -1) {
-            guildList.push({
-                id: guild.id,
-                cloningLock: false
-            });
-        }
-    }
-});
-
-client.on('guildDelete', (guild: Eris.Guild) => {
+client.on('voiceStateUpdate', (member: Eris.Member, oldState: Eris.VoiceState): void => {
     try {
-        const guildIndex: number = guildList.findIndex((guildInfo: IGuildInfo) => guildInfo.id === guild.id);
-    
-        console.log(`Mimas left ${guild.name}`);
-        
-        if (guildIndex > -1) {
-            guildList.splice(guildIndex, 1);
+        if (!!member.voiceState.channelID) {
+            if (!!member.voiceState.channelID) {
+                const newVoiceChannel: Eris.VoiceChannel = <Eris.VoiceChannel>client.getChannel(member.voiceState.channelID);
+                cloneVoiceChannel(newVoiceChannel);
+            }
+
+            if (!!oldState.channelID) {
+                const oldVoiceChannel: Eris.VoiceChannel = (<Eris.VoiceChannel>client.getChannel(oldState.channelID));
+
+                if (!!oldVoiceChannel && oldVoiceChannel.voiceMembers.size < 1 && getEmptyVoiceChannelClones(oldVoiceChannel).length > 0) {
+                    oldVoiceChannel.delete();
+                }
+            }
         }
     } catch(error) {
         console.log(error);
     }
 });
 
-client.on('voiceStateUpdate', (member: Eris.Member, oldState: Eris.VoiceState): void => {
+client.on('guildCreate', (guild: Eris.Guild) => {
+    if (!guild.unavailable) {
+        console.log(`Mimas joined ${guild.name}`);
+    }
+});
+
+client.on('guildDelete', (guild: Eris.Guild) => {
     try {
-        if (!!member.voiceState.channelID) {
-            const newVoiceChannel: Eris.VoiceChannel = <Eris.VoiceChannel>client.getChannel(member.voiceState.channelID);
-            const oldVoiceChannel: Eris.VoiceChannel = <Eris.VoiceChannel>client.getChannel(oldState.channelID);
-
-            cloneVoiceChannel(newVoiceChannel);
-
-            if (!!oldVoiceChannel && oldVoiceChannel.voiceMembers.size < 1 && getEmptyVoiceChannelClones(oldVoiceChannel).length > 0) {
-                oldVoiceChannel.delete();
-            }
-        }
+        guildRegistry.removeGuild(guild.id);
+    
+        console.log(`Mimas left ${guild.name}`);
     } catch(error) {
         console.log(error);
     }
