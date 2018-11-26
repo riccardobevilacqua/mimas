@@ -1,5 +1,9 @@
 import * as Eris from 'eris';
-import { IGuildInfo } from './interfaces';
+
+export interface IGuildInfo {
+    id: string
+    cloningLock: boolean
+};
 
 export class GuildRegistry {
     guildList: IGuildInfo[] = []
