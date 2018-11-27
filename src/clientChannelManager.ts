@@ -35,6 +35,33 @@ export class ClientChannelManager extends Eris.Client {
         return guild.members.find((member: Eris.Member) => member.user === user);
     }
 
+    sortChannels(guild: Eris.Guild): void {
+        const voiceChannels: Eris.VoiceChannel[] = <Eris.VoiceChannel[]>guild.channels
+            .filter((channel: Eris.AnyGuildChannel) => channel.type === 2)
+            .sort((a: Eris.AnyGuildChannel, b: Eris.AnyGuildChannel) => {
+                let result: number = 0;
+
+                if (a.createdAt < b.createdAt) {
+                    result = -1;
+                } else if (a.createdAt > b.createdAt) {
+                    result = 1;
+                }
+
+                return result;
+            });
+
+        const uniqueVoiceChannels: string[] = [...new Set(voiceChannels)]
+            .map((voiceChannel: Eris.VoiceChannel) => {
+                return voiceChannel.name;
+            });
+
+        voiceChannels.forEach((channel: Eris.VoiceChannel) => {
+            const basePosition: number = uniqueVoiceChannels.indexOf(channel.name);
+
+            channel.editPosition(basePosition + 1);
+        });
+    }
+
     cloneVoiceChannel(voiceChannel: Eris.VoiceChannel): void {
         try {
             const self: ClientChannelManager = this;
@@ -53,10 +80,9 @@ export class ClientChannelManager extends Eris.Client {
                             (<Eris.VoiceChannel>channel).edit({
                                 userLimit: voiceChannel.userLimit
                             });
-                            // channel.editPosition(voiceChannel.position);
-                        })
-                        .then(() => {
-                            self.guildRegistry.toggleCloningLock(registeredGuild.id);
+
+                            self.sortChannels(channel.guild);
+                            self.guildRegistry.toggleCloningLock(registeredGuild.id)
                         })
                         .catch((error) => console.log(error));
                 }
