@@ -30,8 +30,12 @@ client.on('voiceChannelSwitch', (member: Eris.Member, newVoiceChannel: Eris.Voic
 });
 
 client.on('guildCreate', (guild: Eris.Guild) => {
-    if (!guild.unavailable) {
-        console.log(`Mimas joined ${guild.name}`);
+    try {
+        if (!guild.unavailable) {
+            console.log(`Mimas joined ${guild.name}`);
+        }
+    } catch(error) {
+        console.log(error);
     }
 });
 
