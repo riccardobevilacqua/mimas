@@ -1,6 +1,11 @@
 import * as Eris from 'eris';
 import { GuildRegistry } from './guildRegistry';
 
+interface channelGroup {
+    name: string
+    children: Eris.VoiceChannel[]
+};
+
 export class ClientChannelManager extends Eris.Client {
     private guildRegistry: GuildRegistry = new GuildRegistry()
 
@@ -35,31 +40,62 @@ export class ClientChannelManager extends Eris.Client {
         return guild.members.find((member: Eris.Member) => member.user === user);
     }
 
-    sortChannels(guild: Eris.Guild): void {
-        const voiceChannels: Eris.VoiceChannel[] = <Eris.VoiceChannel[]>guild.channels
-            .filter((channel: Eris.AnyGuildChannel) => channel.type === 2)
-            .sort((a: Eris.AnyGuildChannel, b: Eris.AnyGuildChannel) => {
-                let result: number = 0;
+    comparePosition(a: Eris.AnyGuildChannel, b: Eris.AnyGuildChannel): number {
+        let result: number = 0;
 
-                if (a.createdAt < b.createdAt) {
-                    result = -1;
-                } else if (a.createdAt > b.createdAt) {
-                    result = 1;
+        if (a.position < b.position) {
+            result = -1;
+        } else if (a.position > b.position) {
+            result = 1;
+        }
+
+        return result;
+    }
+
+    sortChannels(channel: Eris.VoiceChannel): void {
+        const voiceChannels: Eris.VoiceChannel[] = <Eris.VoiceChannel[]>channel.guild.channels
+            .filter((guildChannel: Eris.AnyGuildChannel) => guildChannel.type === 2 && channel.parentID === guildChannel.parentID)
+            .sort(this.comparePosition);
+
+        const groups: object[] = voiceChannels.reduce((acc: channelGroup[], current: Eris.VoiceChannel) => {
+                const groupIndex: number = acc.findIndex((item: channelGroup) => item.name === current.name);
+                
+                if (groupIndex === -1) {
+                    acc.push(<channelGroup>{
+                        name: current.name,
+                        children: [current]
+                    })
+                } else {
+                    acc[groupIndex].children.push(current);
                 }
 
-                return result;
+                return acc;
+            }, []);
+
+        groups.forEach((group: channelGroup, index: number) => {
+            group.children.forEach((child: Eris.VoiceChannel, childIndex: number) => {
+                const newPosition: number = (index + 1) * 1000 + childIndex;
+                console.log(`THEORETICAL -> CHANNEL [${child.name}] -> OLD POSITION [${child.position}] | NEW POSITION [${newPosition}]`);
+                child.editPosition(newPosition);
+
+                console.log(`REAL -> CHANNEL [${child.name}] -> NEW POSITION [${newPosition}]`);
             });
-
-        const uniqueVoiceChannels: string[] = [...new Set(voiceChannels)]
-            .map((voiceChannel: Eris.VoiceChannel) => {
-                return voiceChannel.name;
-            });
-
-        voiceChannels.forEach((channel: Eris.VoiceChannel) => {
-            const basePosition: number = uniqueVoiceChannels.indexOf(channel.name);
-
-            channel.editPosition(basePosition + 1);
         });
+
+        // const uniqueVoiceChannels: string[] = [...new Set(voiceChannels.map((voiceChannel: Eris.VoiceChannel) => voiceChannel.name))];
+
+        // console.log('UNIQUE CHANNELS', uniqueVoiceChannels);
+
+        // voiceChannels.forEach((voiceChannel: Eris.VoiceChannel) => {
+        //     const basePosition: number = uniqueVoiceChannels.indexOf(voiceChannel.name);
+        //     const newPosition: number = (basePosition + 1) * 1000;
+
+        //     console.log(`CHANNEL [${voiceChannel.name}] -> OLD POSITION [${voiceChannel.position}] | NEW POSITION [${newPosition}]`);
+        //     console.log('=============================');
+
+        //     voiceChannel.editPosition(newPosition)
+        //         .then(()=> console.log(`CHANNEL [${voiceChannel.name}] | POSITION [${voiceChannel.position}]`));
+        // });
     }
 
     cloneVoiceChannel(voiceChannel: Eris.VoiceChannel): void {
@@ -81,7 +117,7 @@ export class ClientChannelManager extends Eris.Client {
                                 userLimit: voiceChannel.userLimit
                             });
 
-                            self.sortChannels(channel.guild);
+                            self.sortChannels(<Eris.VoiceChannel>channel);
                             self.guildRegistry.toggleCloningLock(registeredGuild.id)
                         })
                         .catch((error) => console.log(error));
