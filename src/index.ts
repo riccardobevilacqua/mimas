@@ -4,6 +4,17 @@ import { ClientChannelManager } from './clientChannelManager';
 
 const client: ClientChannelManager = new ClientChannelManager(token);
 
+client.on('messageCreate', (message: Eris.Message) => {
+    if (message.content === '!channels') {
+        const textChannel: Eris.TextChannel = (<Eris.TextChannel>message.channel);
+        textChannel.guild.channels
+            .filter((channel: Eris.AnyGuildChannel) => channel.type === 2)
+            .forEach((channel: Eris.AnyGuildChannel) => 
+                textChannel.createMessage(`${channel.name} -> POS [${channel.position}]`)
+            );
+    }
+});
+
 client.on('voiceChannelJoin', (member: Eris.Member, newVoiceChannel: Eris.VoiceChannel): void => {
     try {
         client.cloneVoiceChannel(newVoiceChannel);
