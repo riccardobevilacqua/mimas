@@ -1,5 +1,3 @@
-import * as Eris from 'eris';
-
 export interface IGuildInfo {
     id: string
     cloningLock: boolean
