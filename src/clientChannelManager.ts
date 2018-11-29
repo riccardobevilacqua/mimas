@@ -72,15 +72,17 @@ export class ClientChannelManager extends Eris.Client {
                 return acc;
             }, []);
 
-        groups.forEach((group: channelGroup, index: number) => {
-            group.children.forEach((child: Eris.VoiceChannel, childIndex: number) => {
-                const newPosition: number = (index + 1) * 1000 + childIndex;
-                console.log(`THEORETICAL -> CHANNEL [${child.name}] -> OLD POSITION [${child.position}] | NEW POSITION [${newPosition}]`);
-                child.editPosition(newPosition);
+        // groups.forEach((group: channelGroup, index: number) => {
+        //     group.children.forEach((child: Eris.VoiceChannel, childIndex: number) => {
+        //         // const newPosition: number = (index + 1) * 100 + childIndex;
+        //         const newPosition: number = index + childIndex;
+        //         console.log(`THEORETICAL -> CHANNEL [${child.name}] -> OLD POSITION [${child.position}] | NEW POSITION [${newPosition}]`);
+        //         child.editPosition(newPosition);
 
-                console.log(`REAL -> CHANNEL [${child.name}] -> NEW POSITION [${newPosition}]`);
-            });
-        });
+        //         console.log(`REAL -> CHANNEL [${child.name}] -> NEW POSITION [${newPosition}]`)
+
+        //     });
+        // });
 
         // const uniqueVoiceChannels: string[] = [...new Set(voiceChannels.map((voiceChannel: Eris.VoiceChannel) => voiceChannel.name))];
 
@@ -98,6 +100,29 @@ export class ClientChannelManager extends Eris.Client {
         // });
     }
 
+    getChannelGroups(channel: Eris.VoiceChannel): channelGroup[] {
+        const voiceChannels: Eris.VoiceChannel[] = <Eris.VoiceChannel[]>channel.guild.channels
+            .filter((guildChannel: Eris.AnyGuildChannel) => guildChannel.type === 2 && channel.parentID === guildChannel.parentID)
+            .sort(this.comparePosition);
+
+        const groups: channelGroup[] = voiceChannels.reduce((acc: channelGroup[], current: Eris.VoiceChannel) => {
+                const groupIndex: number = acc.findIndex((item: channelGroup) => item.name === current.name);
+                
+                if (groupIndex === -1) {
+                    acc.push(<channelGroup>{
+                        name: current.name,
+                        children: [current]
+                    })
+                } else {
+                    acc[groupIndex].children.push(current);
+                }
+
+                return acc;
+            }, []);
+
+        return groups;
+    }
+
     cloneVoiceChannel(voiceChannel: Eris.VoiceChannel): void {
         try {
             const self: ClientChannelManager = this;
@@ -110,14 +135,31 @@ export class ClientChannelManager extends Eris.Client {
                     && self.hasCloningPermissions(voiceChannel, self.user) 
                     && !registeredGuild.cloningLock) {
                     this.guildRegistry.toggleCloningLock(registeredGuild.id);
-        
+                    
                     self.createChannel(registeredGuild.id, voiceChannel.name, 2, null, voiceChannel.parentID)
-                        .then((channel: Eris.AnyGuildChannel) => {
-                            (<Eris.VoiceChannel>channel).edit({
+                    .then((channel: Eris.AnyGuildChannel) => {
+                            let createdChannel: Eris.VoiceChannel = <Eris.VoiceChannel>channel;
+                            
+                            createdChannel.edit({
                                 userLimit: voiceChannel.userLimit
                             });
-
-                            self.sortChannels(<Eris.VoiceChannel>channel);
+                            // self.sortChannels(voiceChannel);
+                            const lastPosition: number = self.getChannelGroups(createdChannel)
+                                .find((group: channelGroup) => group.name === createdChannel.name)
+                                .children
+                                .find((item: Eris.VoiceChannel, index: number, obj: Eris.VoiceChannel[]) => {
+                                    return index === obj.length - 2;
+                                })
+                                .position;
+                            const newPosition: number = lastPosition + 1;
+                            // console.log(self.getChannelGroups(createdChannel)
+                            // .find((group: channelGroup) => group.name === createdChannel.name)
+                            // .children
+                            // .find((item: Eris.VoiceChannel, index: number, obj: Eris.VoiceChannel[]) => {
+                            //     return index === obj.length - 2;
+                            // }));
+                            console.log(`${channel.name} -> [${newPosition}]`);
+                            channel.editPosition(newPosition);
                             self.guildRegistry.toggleCloningLock(registeredGuild.id)
                         })
                         .catch((error) => console.log(error));
