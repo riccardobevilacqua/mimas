@@ -5,13 +5,21 @@ import { ClientChannelManager } from './clientChannelManager';
 const client: ClientChannelManager = new ClientChannelManager(token);
 
 client.on('messageCreate', (message: Eris.Message) => {
-    if (message.content === '!channels') {
-        const textChannel: Eris.TextChannel = (<Eris.TextChannel>message.channel);
+    const textChannel: Eris.TextChannel = (<Eris.TextChannel>message.channel);
+
+    if (message.content === '!channels') {        
         textChannel.guild.channels
             .filter((channel: Eris.AnyGuildChannel) => channel.type === 2)
             .forEach((channel: Eris.AnyGuildChannel) => 
                 textChannel.createMessage(`${channel.name} -> POS [${channel.position}]`)
             );
+    } else if (message.content === '!mv') {
+        try {
+            console.log('Check');
+            client.editChannelPosition('517104545520681000', 3);
+        } catch(error) {
+            console.log(error);
+        }
     }
 });
 
