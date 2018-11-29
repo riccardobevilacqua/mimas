@@ -25,20 +25,15 @@ export class ClientChannelManager extends Discord.Client {
             .filter((channel: Discord.VoiceChannel) => channel.members.size === 0);
     }
     
-    // hasCloningPermissions(voiceChannel: Eris.VoiceChannel, user: Eris.User): boolean {
-    //     const clientMember: Eris.Member = this.getUserMember(voiceChannel.guild, user);
-    //     let result = false;
+    hasCloningPermissions(voiceChannel: Discord.VoiceChannel): boolean {
+        let result = false;
     
-    //     if (voiceChannel.permissionsOf(clientMember.id).has('manageChannels')) {
-    //         result = true;
-    //     }
+        if (voiceChannel.permissionsFor(this.user).has('MANAGE_CHANNELS')) {
+            result = true;
+        }
     
-    //     return result;
-    // }
-    
-    // getUserMember(guild: Eris.Guild, user: Eris.User): Eris.Member {
-    //     return guild.members.find((member: Eris.Member) => member.user === user);
-    // }
+        return result;
+    }
 
     // comparePosition(a: Eris.AnyGuildChannel, b: Eris.AnyGuildChannel): number {
     //     let result: number = 0;
@@ -123,17 +118,17 @@ export class ClientChannelManager extends Discord.Client {
     //     return groups;
     // }
 
-    // cloneVoiceChannel(voiceChannel: Eris.VoiceChannel): void {
-    //     try {
-    //         const self: ClientChannelManager = this;
-    //         if (!!voiceChannel) {
-    //             self.guildRegistry.addGuild(voiceChannel.guild.id);
-    //             const registeredGuild = self.guildRegistry.findGuild(voiceChannel.guild.id);
+    cloneVoiceChannel(voiceChannel: Discord.VoiceChannel): void {
+        try {
+            const self: ClientChannelManager = this;
+            if (!!voiceChannel) {
+                self.guildRegistry.addGuild(voiceChannel.guild.id);
+                const registeredGuild = self.guildRegistry.findGuild(voiceChannel.guild.id);
                         
-    //             if (voiceChannel.voiceMembers.size > 0 
-    //                 && self.getEmptyVoiceChannelClones(voiceChannel).length < 1 
-    //                 && self.hasCloningPermissions(voiceChannel, self.user) 
-    //                 && !registeredGuild.cloningLock) {
+                if (voiceChannel.members.size > 0 
+                    && self.getEmptyVoiceChannelClones(voiceChannel).length < 1 
+                    && self.hasCloningPermissions(voiceChannel) 
+                    && !registeredGuild.cloningLock) {
     //                 this.guildRegistry.toggleCloningLock(registeredGuild.id);
                     
     //                 self.createChannel(registeredGuild.id, voiceChannel.name, 2, null, voiceChannel.parentID)
@@ -163,12 +158,12 @@ export class ClientChannelManager extends Discord.Client {
     //                         self.guildRegistry.toggleCloningLock(registeredGuild.id)
     //                     })
     //                     .catch((error) => console.log(error));
-    //             }
-    //         }
-    //     } catch (error) {
-    //         console.log(error);
-    //     }
-    // }
+                }
+            }
+        } catch (error) {
+            console.log(error);
+        }
+    }
 
     removeCloneVoiceChannel(voiceChannel: Discord.VoiceChannel): void {
         try {

@@ -31,8 +31,8 @@ const client: ClientChannelManager = new ClientChannelManager();
 
 client.on('voiceStateUpdate', (oldMember: Discord.GuildMember, newMember: Discord.GuildMember) => {
     try {    
-        if (oldMember.voiceChannel && newMember.voiceChannel) {
-            // Join channel
+        if (newMember.voiceChannel) {
+            client.cloneVoiceChannel(newMember.voiceChannel);
         }
         
         if (oldMember.voiceChannel && !newMember.voiceChannel) {
