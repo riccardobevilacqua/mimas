@@ -92,16 +92,16 @@ export class ClientChannelManager extends Discord.Client {
                                     value.edit({
                                         userLimit: voiceChannel.userLimit
                                     });
-                                    
+
                                     self.getChannelGroups(voiceChannel)    
                                         .reduce((acc: Discord.VoiceChannel[], current: channelGroup) => 
                                             [...acc, ...current.children],
                                             []
                                         )
-                                        .forEach((channel: Discord.VoiceChannel, index: number) => {
-                                            const newPosition: number = (index + 1) * 1000 + 1;
-                                            console.log(`CHANNEL [${channel.name}] -> POS [${newPosition}]`);
-                                            channel.setPosition(newPosition);
+                                        .forEach((channel: Discord.VoiceChannel, index: number) => {                                            
+                                            channel.edit({
+                                                position: index + 1
+                                            });
                                         });
                                 });
 
