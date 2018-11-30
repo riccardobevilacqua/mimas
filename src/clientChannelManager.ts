@@ -91,18 +91,19 @@ export class ClientChannelManager extends Discord.Client {
                                 .then((value: Discord.VoiceChannel) => {
                                     value.edit({
                                         userLimit: voiceChannel.userLimit
-                                    });
-
-                                    self.getChannelGroups(voiceChannel)    
-                                        .reduce((acc: Discord.VoiceChannel[], current: channelGroup) => 
-                                            [...acc, ...current.children],
-                                            []
-                                        )
-                                        .forEach((channel: Discord.VoiceChannel, index: number) => {                                            
-                                            channel.edit({
-                                                position: index + 1
+                                    })
+                                    .then(() => {
+                                        self.getChannelGroups(voiceChannel)    
+                                            .reduce((acc: Discord.VoiceChannel[], current: channelGroup) => 
+                                                [...acc, ...current.children],
+                                                []
+                                            )
+                                            .forEach((channel: Discord.VoiceChannel, index: number) => {                                            
+                                                channel.edit({
+                                                    position: index + 1
+                                                });
                                             });
-                                        });
+                                    });
                                 });
 
                         })
