@@ -10,7 +10,7 @@ client.on('voiceStateUpdate', (oldMember: Discord.GuildMember, newMember: Discor
             client.cloneVoiceChannel(newMember.voiceChannel);
         }
         
-        if (oldMember.voiceChannel && !newMember.voiceChannel) {
+        if (oldMember.voiceChannel) {
             client.removeCloneVoiceChannel(oldMember.voiceChannel);
         }
     } catch(error) {
