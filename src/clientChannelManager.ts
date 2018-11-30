@@ -47,74 +47,26 @@ export class ClientChannelManager extends Discord.Client {
         return result;
     }
 
-    // sortChannels(channel: Eris.VoiceChannel): void {
-    //     const voiceChannels: Eris.VoiceChannel[] = <Eris.VoiceChannel[]>channel.guild.channels
-    //         .filter((guildChannel: Eris.AnyGuildChannel) => guildChannel.type === 2 && channel.parentID === guildChannel.parentID)
-    //         .sort(this.comparePosition);
-
-    //     const groups: object[] = voiceChannels.reduce((acc: channelGroup[], current: Eris.VoiceChannel) => {
-    //             const groupIndex: number = acc.findIndex((item: channelGroup) => item.name === current.name);
-                
-    //             if (groupIndex === -1) {
-    //                 acc.push(<channelGroup>{
-    //                     name: current.name,
-    //                     children: [current]
-    //                 })
-    //             } else {
-    //                 acc[groupIndex].children.push(current);
-    //             }
-
-    //             return acc;
-    //         }, []);
-
-    //     // groups.forEach((group: channelGroup, index: number) => {
-    //     //     group.children.forEach((child: Eris.VoiceChannel, childIndex: number) => {
-    //     //         // const newPosition: number = (index + 1) * 100 + childIndex;
-    //     //         const newPosition: number = index + childIndex;
-    //     //         console.log(`THEORETICAL -> CHANNEL [${child.name}] -> OLD POSITION [${child.position}] | NEW POSITION [${newPosition}]`);
-    //     //         child.editPosition(newPosition);
-
-    //     //         console.log(`REAL -> CHANNEL [${child.name}] -> NEW POSITION [${newPosition}]`)
-
-    //     //     });
-    //     // });
-
-    //     // const uniqueVoiceChannels: string[] = [...new Set(voiceChannels.map((voiceChannel: Eris.VoiceChannel) => voiceChannel.name))];
-
-    //     // console.log('UNIQUE CHANNELS', uniqueVoiceChannels);
-
-    //     // voiceChannels.forEach((voiceChannel: Eris.VoiceChannel) => {
-    //     //     const basePosition: number = uniqueVoiceChannels.indexOf(voiceChannel.name);
-    //     //     const newPosition: number = (basePosition + 1) * 1000;
-
-    //     //     console.log(`CHANNEL [${voiceChannel.name}] -> OLD POSITION [${voiceChannel.position}] | NEW POSITION [${newPosition}]`);
-    //     //     console.log('=============================');
-
-    //     //     voiceChannel.editPosition(newPosition)
-    //     //         .then(()=> console.log(`CHANNEL [${voiceChannel.name}] | POSITION [${voiceChannel.position}]`));
-    //     // });
-    // }
-
     getChannelGroups(channel: Discord.VoiceChannel): channelGroup[] {
         const voiceChannels: Discord.VoiceChannel[] = <Discord.VoiceChannel[]>channel.guild.channels
+            .array()
             .filter((guildChannel: Discord.GuildChannel) => guildChannel.type === 'voice' && channel.parentID === guildChannel.parentID)
-            .sort(this.comparePosition)
-            .array();
+            .sort(this.comparePosition);
 
         const groups: channelGroup[] = voiceChannels.reduce((acc: channelGroup[], current: Discord.VoiceChannel) => {
-                const groupIndex: number = acc.findIndex((item: channelGroup) => item.name === current.name);
-                
-                if (groupIndex === -1) {
-                    acc.push(<channelGroup>{
-                        name: current.name,
-                        children: [current]
-                    })
-                } else {
-                    acc[groupIndex].children.push(current);
-                }
+            const groupIndex: number = acc.findIndex((item: channelGroup) => item.name === current.name);
+            
+            if (groupIndex === -1) {
+                acc.push(<channelGroup>{
+                    name: current.name,
+                    children: [current]
+                })
+            } else {
+                acc[groupIndex].children.push(current);
+            }
 
-                return acc;
-            }, []);
+            return acc;
+        }, []);
 
         return groups;
     }
@@ -122,7 +74,7 @@ export class ClientChannelManager extends Discord.Client {
     cloneVoiceChannel(voiceChannel: Discord.VoiceChannel): void {
         try {
             const self: ClientChannelManager = this;
-            if (!!voiceChannel) {
+            if (voiceChannel) {
                 self.guildRegistry.addGuild(voiceChannel.guild.id);
                 const registeredGuild = self.guildRegistry.findGuild(voiceChannel.guild.id);
                         
@@ -135,20 +87,24 @@ export class ClientChannelManager extends Discord.Client {
                     voiceChannel
                         .clone()
                         .then((createdChannel: Discord.VoiceChannel) => {
-                            createdChannel.setParent(voiceChannel.parentID);
-                            createdChannel.edit({
-                                userLimit: voiceChannel.userLimit
-                            });                            
-                            
-                            const channelList: Discord.VoiceChannel[] = self.getChannelGroups(createdChannel)
-                                .find((group: channelGroup) => group.name === createdChannel.name)
-                                .children;
-                            
-                            const newPosition: number = channelList[channelList.length - 2].position + 1;
-                            
-                            createdChannel.setPosition(newPosition);
-                            
-                            console.log(`Created ${createdChannel.name} with max [${createdChannel.userLimit}] users in position [${createdChannel.position}]`);
+                            createdChannel.setParent(voiceChannel.parentID)
+                                .then((value: Discord.VoiceChannel) => {
+                                    value.edit({
+                                        userLimit: voiceChannel.userLimit
+                                    });
+                                    
+                                    self.getChannelGroups(voiceChannel)    
+                                        .reduce((acc: Discord.VoiceChannel[], current: channelGroup) => 
+                                            [...acc, ...current.children],
+                                            []
+                                        )
+                                        .forEach((channel: Discord.VoiceChannel, index: number) => {
+                                            const newPosition: number = (index + 1) * 1000 + 1;
+                                            console.log(`CHANNEL [${channel.name}] -> POS [${newPosition}]`);
+                                            channel.setPosition(newPosition);
+                                        });
+                                });
+
                         })
                         .then(() => self.guildRegistry.toggleCloningLock(registeredGuild.id))
                         .catch((error) => console.log(error));
