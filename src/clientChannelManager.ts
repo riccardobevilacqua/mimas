@@ -28,7 +28,7 @@ export class ClientChannelManager extends Discord.Client {
     hasCloningPermissions(voiceChannel: Discord.VoiceChannel): boolean {
         let result = false;
     
-        if (voiceChannel.permissionsFor(this.user).has('MANAGE_CHANNELS')) {
+        if (voiceChannel.parent.permissionsFor(this.user).has('MANAGE_CHANNELS')) {
             result = true;
         }
     
@@ -74,13 +74,12 @@ export class ClientChannelManager extends Discord.Client {
     cloneVoiceChannel(voiceChannel: Discord.VoiceChannel): void {
         try {
             const self: ClientChannelManager = this;
-            if (voiceChannel) {
+            if (voiceChannel && self.hasCloningPermissions(voiceChannel)) {
                 self.guildRegistry.addGuild(voiceChannel.guild.id);
                 const registeredGuild = self.guildRegistry.findGuild(voiceChannel.guild.id);
                         
                 if (voiceChannel.members.size > 0 
                     && self.getEmptyVoiceChannelClones(voiceChannel).length < 1 
-                    && self.hasCloningPermissions(voiceChannel) 
                     && !registeredGuild.cloningLock) {
                     self.guildRegistry.toggleCloningLock(registeredGuild.id);
                     
