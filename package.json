@@ -1,7 +1,7 @@
 {
-  "name": "discord-channel-autogen",
+  "name": "discord-bot-mimas",
   "version": "1.0.0",
-  "description": "This bot automatically generates channels in Discord",
+  "description": "A discord bot to manage automatically voice channels",
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
