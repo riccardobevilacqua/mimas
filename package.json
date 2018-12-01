@@ -6,20 +6,23 @@
   "scripts": {
     "build": "tsc",
     "start": "node ./dist/index.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "tsc -w"
   },
-  "keywords": [],
+  "keywords": [
+    "discord",
+    "bot",
+    "node",
+    "discordapp"
+  ],
   "author": "Riccardo Bevilacqua <bevilacqua.riccardo@gmail.com>",
   "license": "MIT",
   "devDependencies": {
     "@types/node": "10.12.9",
-    "awesome-typescript-loader": "5.2.1",
     "tslint": "5.11.0",
-    "typescript": "3.1.4",
-    "webpack": "4.26.0",
-    "webpack-cli": "3.1.2"
+    "typescript": "3.1.4"
   },
   "dependencies": {
-    "discord.js": "11.4.2"
+    "discord.js": "^11.4.2"
   }
 }
