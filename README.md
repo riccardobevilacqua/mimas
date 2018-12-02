@@ -19,5 +19,5 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Acknowledgments
 
-* Thanks to Discord staff for providing public APIs
-* Thanks to Discord.js for providing a JS framework
+* Thanks to [Discord](https://discordapp.com/) staff for providing public APIs
+* Thanks to [Discord.js](https://discord.js.org/) for providing a JS framework
