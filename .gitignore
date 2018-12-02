@@ -22,3 +22,5 @@ GTAGS
 node_modules
 dist
 src/token.ts
+.env
+*.txt
