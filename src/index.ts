@@ -1,6 +1,10 @@
+import * as Http from 'http';
+import * as Dotenv from 'dotenv';
 import * as Discord from 'discord.js';
-import { token } from './token';
 import { ClientChannelManager } from './clientChannelManager';
+
+Dotenv.config();
+Http.createServer().listen(3000);
 
 const client: ClientChannelManager = new ClientChannelManager();
 
@@ -40,4 +44,4 @@ client.on('guildDelete', (guild: Discord.Guild) => {
 
 client.on('ready', () => console.log('Ready!'));
 
-client.login(token);
+client.login(process.env.TOKEN);
