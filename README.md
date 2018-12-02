@@ -2,7 +2,7 @@
 
 A discord bot to manage automatically voice channels.
 
-### Add Mimas to your Discord
+## Add Mimas to your Discord
 
 Invite Mimas to your Discord clicking [here](https://discordapp.com/oauth2/authorize?client_id=500602853098782752&scope=bot&permissions=16) and follow the instructions.
 
