@@ -26,9 +26,11 @@ export class ClientChannelManager extends Discord.Client {
     }
     
     hasCloningPermissions(voiceChannel: Discord.VoiceChannel): boolean {
+        const categoryPermissions: Discord.Permissions = voiceChannel.parent.permissionsFor(this.user);
+        const channelPermissions: Discord.Permissions = voiceChannel.permissionsFor(this.user);
         let result = false;
-    
-        if (voiceChannel.parent.permissionsFor(this.user).has('MANAGE_CHANNELS')) {
+        
+        if (categoryPermissions.has('MANAGE_CHANNELS') && channelPermissions.has('VIEW_CHANNEL')) {
             result = true;
         }
     
