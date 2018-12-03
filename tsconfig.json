@@ -2,6 +2,7 @@
     "compilerOptions": {
         "outDir": "./dist/",
         "noImplicitAny": true,
+        "removeComments": true,
         "module": "commonjs",
         "target": "ES2015"
     },
