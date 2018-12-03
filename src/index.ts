@@ -8,12 +8,6 @@ Http.createServer().listen(3000);
 
 const client: ClientChannelManager = new ClientChannelManager();
 
-let token: string = process.env.TOKEN_DEV;
-
-if (process.env.NODE_ENV === 'production') {
-    token = process.env.TOKEN;
-}
-
 client.on('voiceStateUpdate', (oldMember: Discord.GuildMember, newMember: Discord.GuildMember) => {
     try {    
         if (newMember.voiceChannel) {
@@ -50,4 +44,4 @@ client.on('guildDelete', (guild: Discord.Guild) => {
 
 client.on('ready', () => console.log('Ready!'));
 
-client.login(token);
+client.login(process.env.TOKEN);
