@@ -107,7 +107,7 @@ export class ClientChannelManager extends Discord.Client {
                     voiceChannel
                         .clone()
                         .then((createdChannel: Discord.VoiceChannel) => {
-                            createdChannel.setPosition(voiceChannel.position);
+                            createdChannel.setPosition(voiceChannel.position + 1);
                         })
                         .then(() => self.guildRegistry.toggleCloningLock(registeredGuild.id))
                         .catch((error) => {
