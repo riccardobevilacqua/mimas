@@ -26,8 +26,8 @@ export class ClientChannelManager extends Discord.Client {
     }
     
     hasCloningPermissions(voiceChannel: Discord.VoiceChannel): boolean {
-        const categoryPermissions: Discord.Permissions = voiceChannel.parent.permissionsFor(this.user);
-        const channelPermissions: Discord.Permissions = voiceChannel.permissionsFor(this.user);
+        const categoryPermissions: Readonly<Discord.Permissions> = voiceChannel.parent.permissionsFor(this.user);
+        const channelPermissions: Readonly<Discord.Permissions> = voiceChannel.permissionsFor(this.user);
         let result = false;
         
         if (categoryPermissions.has('MANAGE_CHANNELS') && channelPermissions.has('VIEW_CHANNEL')) {
@@ -47,6 +47,25 @@ export class ClientChannelManager extends Discord.Client {
         }
 
         return result;
+    }
+
+    sortVoiceChannels(voiceChannel: Discord.VoiceChannel) {
+        try {
+            if (voiceChannel) {
+                this.getChannelGroups(voiceChannel)    
+                    .reduce((acc: Discord.VoiceChannel[], current: channelGroup) => 
+                        [...acc, ...current.children],
+                        []
+                    )
+                    .forEach((channel: Discord.VoiceChannel, index: number) => {
+                        channel.edit({
+                            position: index + 1
+                        });
+                    });
+            }
+        } catch(error) {
+            console.log(error);
+        }
     }
 
     getChannelGroups(channel: Discord.VoiceChannel): channelGroup[] {
@@ -88,28 +107,13 @@ export class ClientChannelManager extends Discord.Client {
                     voiceChannel
                         .clone()
                         .then((createdChannel: Discord.VoiceChannel) => {
-                            createdChannel.setParent(voiceChannel.parentID)
-                                .then((value: Discord.VoiceChannel) => {
-                                    value.edit({
-                                        userLimit: voiceChannel.userLimit
-                                    })
-                                    .then(() => {
-                                        self.getChannelGroups(voiceChannel)    
-                                            .reduce((acc: Discord.VoiceChannel[], current: channelGroup) => 
-                                                [...acc, ...current.children],
-                                                []
-                                            )
-                                            .forEach((channel: Discord.VoiceChannel, index: number) => {                                            
-                                                channel.edit({
-                                                    position: index + 1
-                                                });
-                                            });
-                                    });
-                                });
-
+                            createdChannel.setPosition(voiceChannel.position);
                         })
                         .then(() => self.guildRegistry.toggleCloningLock(registeredGuild.id))
-                        .catch((error) => console.log(error));
+                        .catch((error) => {
+                            self.guildRegistry.toggleCloningLock(registeredGuild.id);
+                            console.log(error);
+                        });
                 }
             }
         } catch (error) {
