@@ -70,16 +70,12 @@ export class ClientChannelManager extends Discord.Client {
                 );
             
             if (refChannels.length > 0) {
-                console.log('FOUND POPULATED CHANNEL WITH SAME NAME');
                 voiceChannel.setPosition(refChannels.pop().position);
             } else {
-                console.log('NEXT ITERATION');
                 this.injectVoiceChannel(voiceChannel, prevChannelList);
             }
         } else {
-            console.log(`INJECT ${voiceChannel.name} [${voiceChannel.id}] AT THE BOTTOM`);
             const lastChannel = categoryEmptyVoiceChannels.pop();
-            console.log(`LAST CHANNEL: ${lastChannel.name} [${lastChannel.id}] WITH POSITION [${lastChannel.position}]`);
             voiceChannel.setPosition(lastChannel.position);
         }
     }
@@ -88,9 +84,18 @@ export class ClientChannelManager extends Discord.Client {
         const uniqueChannels: string[] = this.getUniqueChannels(voiceChannel);
         const prevChannelList: string[] = uniqueChannels.slice(0, uniqueChannels.indexOf(voiceChannel.name)).reverse();
 
-        console.log(`UNIQUE CHANNELS [${uniqueChannels}] | PREV CHANNEL LIST [${prevChannelList}]`);
-
         this.injectVoiceChannel(voiceChannel, prevChannelList);
+    }
+
+    isLastVoiceChannel(voiceChannel: Discord.VoiceChannel): boolean {
+        const channelsList: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
+        let result = false;
+
+        if (channelsList && channelsList.length > 0 && voiceChannel.position === channelsList.pop().position) {
+            result = true;
+        }
+
+        return result;
     }
 
     cloneVoiceChannel(voiceChannel: Discord.VoiceChannel): void {
@@ -111,7 +116,11 @@ export class ClientChannelManager extends Discord.Client {
                         .then((createdChannel: Discord.VoiceChannel) => {
                             createdChannel
                                 .setPosition(voiceChannel.position)
-                                .then(() => self.moveJoinedChannel(voiceChannel))
+                                .then(() => {
+                                    if (!self.isLastVoiceChannel(voiceChannel)) {
+                                        self.moveJoinedChannel(voiceChannel);
+                                    }
+                                })
                                 .catch((error) => console.log(error));
                         })
                         .then(() => self.guildRegistry.toggleCloningLock(registeredGuild.id))
