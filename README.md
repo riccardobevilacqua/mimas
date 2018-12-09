@@ -10,13 +10,17 @@ Mimas can:
 - dynamically remove unnecessary voice channels
 - keep your voice channels sorted as you designed
 
-What does that mean?
+See it in action!
 
-As soon as a user joins an empty voice channel, Mimas will create an identical empty voice channel beneath (with same name).
-
-When a voice channel is left by its last user, Mimas will remove it if necessary.
+![Mimas in action](./img/mimas-in-action.gif)
 
 At any given time there will be an empty voice channel available, distinct by name.
+
+Your channels order will be preserved.
+
+Your user will easily find their friends or create seamlessly new channels thanks to Mimas.
+
+Unnecessary channels will be removed automatically.
 
 Mimas will keep your Discord server tidy and clean, giving your community a neat user experience.
 
