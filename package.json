@@ -18,13 +18,13 @@
   "author": "Riccardo Bevilacqua <bevilacqua.riccardo@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@types/dotenv": "6.1.0",
-    "@types/node": "10.12.9",
-    "tslint": "5.11.0",
-    "typescript": "3.1.4"
+    "@types/dotenv": "^6.1.1",
+    "@types/node": "^12.11.0",
+    "tslint": "^5.20.0",
+    "typescript": "^3.6.4"
   },
   "dependencies": {
-    "discord.js": "github:discordjs/discord.js",
-    "dotenv": "6.1.0"
+    "discord.js": "^11.5.1",
+    "dotenv": "^8.1.0"
   }
 }
