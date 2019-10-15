@@ -8,15 +8,15 @@ Http.createServer().listen(3000);
 
 const client: ClientChannelManager = new ClientChannelManager();
 
-client.on('voiceStateUpdate', (oldState: Discord.VoiceState, newState: Discord.VoiceState) => {
+client.on('voiceStateUpdate', (oldState: Discord.GuildMember, newState: Discord.GuildMember) => {
     try {
-        if (newState.channel !== oldState.channel) {
-            if (newState.channel) {
-                client.cloneVoiceChannel(newState.channel);
+        if (newState.voiceChannelID !== oldState.voiceChannelID) {
+            if (newState.voiceChannel) {
+                client.cloneVoiceChannel(newState.voiceChannel);
             }
             
-            if (oldState.channel) {
-                client.removeCloneVoiceChannel(oldState.channel);
+            if (oldState.voiceChannel) {
+                client.removeCloneVoiceChannel(oldState.voiceChannel);
             }
         }
     } catch(error) {
