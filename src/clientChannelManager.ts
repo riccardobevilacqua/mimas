@@ -62,28 +62,36 @@ export class ClientChannelManager extends Discord.Client {
         const categoryVoiceChannels: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
         const categoryEmptyVoiceChannels: Discord.VoiceChannel[] = categoryVoiceChannels.filter((item: Discord.VoiceChannel) => item.members.size === 0);
 
+        console.info(`CATEGORY VOICE CHANNELS: ${categoryVoiceChannels}`);
+        console.info(`CATEGORY EMPTY VOICE CHANNELS: ${categoryEmptyVoiceChannels}`);
         if (prevChannelList.length > 0) {
+            console.log('PREV CHANNELS DETECTED');
             const refChannelName: string = prevChannelList.pop();
+            console.log(`REF CHANNEL: ${refChannelName}`);
             const refChannels: Discord.VoiceChannel[] = categoryVoiceChannels
                 .filter((item: Discord.VoiceChannel) => 
                     item.name === refChannelName && item.id !== voiceChannel.id && item.members.size > 0
                 );
+
+            console.info(`REF CHANNELS: ${refChannels}`);
             
             if (refChannels.length > 0) {
-                voiceChannel.setPosition(refChannels.pop().position);
+                voiceChannel.edit({position: refChannels.pop().position});
             } else {
                 this.injectVoiceChannel(voiceChannel, prevChannelList);
             }
         } else {
             const lastChannel = categoryEmptyVoiceChannels.pop();
-            voiceChannel.setPosition(lastChannel.position);
+            console.log(`LAST CHANNEL [${lastChannel}] | POS [${lastChannel.position}]`);
+            voiceChannel.edit({position: lastChannel.position});
         }
     }
 
     moveJoinedChannel(voiceChannel: Discord.VoiceChannel): void {
         const uniqueChannels: string[] = this.getUniqueChannels(voiceChannel);
         const prevChannelList: string[] = uniqueChannels.slice(0, uniqueChannels.indexOf(voiceChannel.name)).reverse();
-
+        console.info(`UNIQUE CHANNELS: ${uniqueChannels}`);
+        console.info(`PREV CHANNELS: ${prevChannelList}`);
         this.injectVoiceChannel(voiceChannel, prevChannelList);
     }
 
@@ -110,16 +118,20 @@ export class ClientChannelManager extends Discord.Client {
                     && self.getEmptyVoiceChannelClones(voiceChannel).length < 1 
                     && !registeredGuild.cloningLock) {
                     self.guildRegistry.toggleCloningLock(registeredGuild.id);
-                    
+
                     voiceChannel
                         .clone()
                         .then((createdChannel: Discord.VoiceChannel) => {
                             createdChannel
-                                .setPosition(voiceChannel.position)
+                                .setParent(voiceChannel.parentID)
                                 .then(() => {
-                                    if (!self.isLastVoiceChannel(voiceChannel)) {
-                                        self.moveJoinedChannel(voiceChannel);
-                                    }
+                                    createdChannel.edit({position: voiceChannel.position});
+                                    createdChannel.setUserLimit(voiceChannel.userLimit);
+                                })
+                                .then(() => {
+                                    // if (!self.isLastVoiceChannel(voiceChannel)) {
+                                    //     self.moveJoinedChannel(voiceChannel);
+                                    // }
                                 })
                                 .catch((error) => console.log(error));
                         })
