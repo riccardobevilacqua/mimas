@@ -83,7 +83,7 @@ export class ClientChannelManager extends Discord.Client {
     moveJoinedChannel(voiceChannel: Discord.VoiceChannel): void {
         const uniqueChannels: string[] = this.getUniqueChannels(voiceChannel);
         const prevChannelList: string[] = uniqueChannels.slice(0, uniqueChannels.indexOf(voiceChannel.name)).reverse();
-
+        
         this.injectVoiceChannel(voiceChannel, prevChannelList);
     }
 
@@ -110,16 +110,24 @@ export class ClientChannelManager extends Discord.Client {
                     && self.getEmptyVoiceChannelClones(voiceChannel).length < 1 
                     && !registeredGuild.cloningLock) {
                     self.guildRegistry.toggleCloningLock(registeredGuild.id);
-                    
+
                     voiceChannel
                         .clone()
                         .then((createdChannel: Discord.VoiceChannel) => {
                             createdChannel
-                                .setPosition(voiceChannel.position)
-                                .then(() => {
-                                    if (!self.isLastVoiceChannel(voiceChannel)) {
-                                        self.moveJoinedChannel(voiceChannel);
-                                    }
+                                .setUserLimit(voiceChannel.userLimit)
+                                .then(value => {
+                                    value
+                                        .setParent(voiceChannel.parentID)
+                                        .then(value => {
+                                            value
+                                                .setPosition(voiceChannel.position)
+                                                .then(() => {
+                                                    if (!self.isLastVoiceChannel(voiceChannel)) {
+                                                        self.moveJoinedChannel(voiceChannel);
+                                                    }
+                                                })
+                                        });
                                 })
                                 .catch((error) => console.log(error));
                         })
