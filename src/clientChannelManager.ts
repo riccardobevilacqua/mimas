@@ -76,14 +76,14 @@ export class ClientChannelManager extends Discord.Client {
             console.info(`REF CHANNELS: ${refChannels}`);
             
             if (refChannels.length > 0) {
-                voiceChannel.edit({position: refChannels.pop().position});
+                voiceChannel.setPosition(refChannels.pop().position);
             } else {
                 this.injectVoiceChannel(voiceChannel, prevChannelList);
             }
         } else {
             const lastChannel = categoryEmptyVoiceChannels.pop();
             console.log(`LAST CHANNEL [${lastChannel}] | POS [${lastChannel.position}]`);
-            voiceChannel.edit({position: lastChannel.position});
+            voiceChannel.setPosition(lastChannel.position);
         }
     }
 
