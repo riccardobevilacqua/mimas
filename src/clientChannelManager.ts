@@ -123,15 +123,20 @@ export class ClientChannelManager extends Discord.Client {
                         .clone()
                         .then((createdChannel: Discord.VoiceChannel) => {
                             createdChannel
-                                .setParent(voiceChannel.parentID)
-                                .then(() => {
-                                    createdChannel.edit({position: voiceChannel.position});
-                                    createdChannel.setUserLimit(voiceChannel.userLimit);
-                                })
-                                .then(() => {
-                                    // if (!self.isLastVoiceChannel(voiceChannel)) {
-                                    //     self.moveJoinedChannel(voiceChannel);
-                                    // }
+                                .setUserLimit(voiceChannel.userLimit)
+                                .then(value => {
+                                    value
+                                        .setParent(voiceChannel.parentID)
+                                        .then(value => {
+                                            value
+                                                .setPosition(voiceChannel.position)
+                                                .then(() => {
+                                                    console.log('===================');
+                                                    if (!self.isLastVoiceChannel(voiceChannel)) {
+                                                        self.moveJoinedChannel(voiceChannel);
+                                                    }
+                                                })
+                                        });
                                 })
                                 .catch((error) => console.log(error));
                         })
