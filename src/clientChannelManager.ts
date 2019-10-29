@@ -66,13 +66,13 @@ export class ClientChannelManager extends Discord.Client {
                 );
             
             if (refChannels.length > 0) {
-                await voiceChannel.setPosition(refChannels.pop().position);
+                await voiceChannel.setPosition(refChannels.pop().position).catch(error => console.log(error));
             } else {
                 this.injectVoiceChannel(voiceChannel, prevChannelList);
             }
         } else {
             const lastChannel = categoryEmptyVoiceChannels.pop();
-            await voiceChannel.setPosition(lastChannel.position);
+            await voiceChannel.setPosition(lastChannel.position).catch(error => console.log(error));
         }
     }
 
@@ -111,7 +111,7 @@ export class ClientChannelManager extends Discord.Client {
                         position: voiceChannel.position,
                         userLimit: voiceChannel.userLimit,
                         parent: voiceChannel.parentID
-                    });
+                    }).catch(error => console.log(error));
 
                     if (!self.isLastVoiceChannel(voiceChannel)) {
                         self.moveJoinedChannel(voiceChannel);
