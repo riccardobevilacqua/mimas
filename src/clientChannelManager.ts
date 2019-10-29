@@ -79,9 +79,6 @@ export class ClientChannelManager extends Discord.Client {
     moveJoinedChannel(voiceChannel: Discord.VoiceChannel): void {
         const uniqueChannels: string[] = this.getUniqueChannels(voiceChannel);
         const prevChannelList: string[] = uniqueChannels.slice(0, uniqueChannels.indexOf(voiceChannel.name)).reverse();
-
-        uniqueChannels.forEach(item => console.log(`DETECTED UNIQUE CHANNEL [${item}]`));
-        prevChannelList.forEach(item => console.log(`DETECTED PREVIOUS CHANNEL [${item}]`));
         
         this.injectVoiceChannel(voiceChannel, prevChannelList);
     }
@@ -90,11 +87,8 @@ export class ClientChannelManager extends Discord.Client {
         const channelsList: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
 
         if (channelsList && channelsList.length > 0 && voiceChannel.position === channelsList.pop().position) {
-            console.log(`CHANNEL [${voiceChannel.name}] is the last`);
             return true;
         }
-
-        console.log(`CHANNEL [${voiceChannel.name}] is NOT the last`);
 
         return false;
     }
