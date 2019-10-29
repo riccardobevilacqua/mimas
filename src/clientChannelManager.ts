@@ -112,11 +112,12 @@ export class ClientChannelManager extends Discord.Client {
                     && !registeredGuild.cloningLock) {
                     self.guildRegistry.toggleCloningLock(registeredGuild.id);
 
-                    const createdChannel: Discord.VoiceChannel = <Discord.VoiceChannel>(await voiceChannel.clone());
-
-                    await createdChannel.setParent(voiceChannel.parentID);
-                    await createdChannel.setUserLimit(voiceChannel.userLimit);
-                    await createdChannel.setPosition(voiceChannel.position);
+                    await voiceChannel.guild.createChannel(voiceChannel.name, {
+                        type: 'voice',
+                        position: voiceChannel.position,
+                        userLimit: voiceChannel.userLimit,
+                        parent: voiceChannel.parentID
+                    });
 
                     if (!self.isLastVoiceChannel(voiceChannel)) {
                         self.moveJoinedChannel(voiceChannel);
