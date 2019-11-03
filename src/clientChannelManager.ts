@@ -54,39 +54,55 @@ export class ClientChannelManager extends Discord.Client {
         return [...new Set(categoryChannelNames)];
     }
 
-    async injectVoiceChannel(voiceChannel: Discord.VoiceChannel, prevChannelList: string[]) {
+    getLastVoiceChannelClone(voiceChannel: Discord.VoiceChannel): Discord.VoiceChannel {
         const categoryVoiceChannels: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
-        const categoryEmptyVoiceChannels: Discord.VoiceChannel[] = categoryVoiceChannels.filter(item => item.members.size === 0);
 
-        if (prevChannelList.length > 0) {
-            const refChannelName: string = prevChannelList.pop();
-            const refChannels: Discord.VoiceChannel[] = categoryVoiceChannels
-                .filter(item => 
-                    item.name === refChannelName && item.id !== voiceChannel.id && item.members.size > 0
-                );
-            
-            if (refChannels.length > 0) {
-                await voiceChannel.setPosition(refChannels.pop().position).catch(error => console.log(error));
-            } else {
-                this.injectVoiceChannel(voiceChannel, prevChannelList);
-            }
+        return categoryVoiceChannels.filter(item => item.id !== voiceChannel.id && item.name === voiceChannel.name && item.members.size > 0).pop();
+    }
+
+    async injectVoiceChannel(voiceChannel: Discord.VoiceChannel, followingVoiceChannels: string[]) {
+        const categoryVoiceChannels: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
+        const categoryPopulatedVoiceChannels: Discord.VoiceChannel[] = [...categoryVoiceChannels.filter(item => item.members.size > 0)];
+
+        const lastVoiceChannelClone: Discord.VoiceChannel = this.getLastVoiceChannelClone(voiceChannel);
+
+        if (this.isLastVoiceChannel(voiceChannel)) {
+            voiceChannel.edit({position: voiceChannel.position + 1});
+        } else if (lastVoiceChannelClone) {
+            voiceChannel.edit({position: lastVoiceChannelClone.position + 1});
+        } else if (categoryPopulatedVoiceChannels.length === 1) {
+            voiceChannel.edit({position: categoryVoiceChannels.pop().position + 1});
         } else {
-            const lastChannel = categoryEmptyVoiceChannels.pop();
-            await voiceChannel.setPosition(lastChannel.position).catch(error => console.log(error));
+            const probe: string = followingVoiceChannels.shift();
+            const eligibleVoiceChannels: Discord.VoiceChannel[] = categoryPopulatedVoiceChannels.filter(item => item.name === probe);
+
+            if (eligibleVoiceChannels.length > 0) {
+                const reference: Discord.VoiceChannel = eligibleVoiceChannels.pop();
+
+                voiceChannel.edit({position: reference.position + 1});
+            } else {
+                this.injectVoiceChannel(voiceChannel, followingVoiceChannels);
+            }
         }
+    }
+
+    getFollowingVoiceChannels(voiceChannel: Discord.VoiceChannel): string[] {
+        const uniqueChannels: string[] = this.getUniqueChannels(voiceChannel);
+        
+        return uniqueChannels.slice(uniqueChannels.indexOf(voiceChannel.name) + 1);
     }
 
     moveJoinedChannel(voiceChannel: Discord.VoiceChannel): void {
         const uniqueChannels: string[] = this.getUniqueChannels(voiceChannel);
-        const prevChannelList: string[] = uniqueChannels.slice(0, uniqueChannels.indexOf(voiceChannel.name)).reverse();
+        const followingChannels: string[] = uniqueChannels.slice(uniqueChannels.indexOf(voiceChannel.name) + 1);
         
-        this.injectVoiceChannel(voiceChannel, prevChannelList);
+        this.injectVoiceChannel(voiceChannel, followingChannels);
     }
 
     isLastVoiceChannel(voiceChannel: Discord.VoiceChannel): boolean {
-        const channelsList: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
+        const channelsList: Discord.VoiceChannel[] = this.getCategoryVoiceChannels(voiceChannel);
 
-        if (channelsList && channelsList.length > 0 && voiceChannel.position === channelsList.pop().position) {
+        if (channelsList && channelsList.length > 0 && voiceChannel && voiceChannel.position === channelsList[channelsList.length - 1].position) {
             return true;
         }
 
@@ -112,11 +128,9 @@ export class ClientChannelManager extends Discord.Client {
                         userLimit: voiceChannel.userLimit,
                         parent: voiceChannel.parentID
                     }).catch(error => console.log(error));
-
-                    if (!self.isLastVoiceChannel(voiceChannel)) {
-                        self.moveJoinedChannel(voiceChannel);
-                    }
-
+    
+                    self.moveJoinedChannel(voiceChannel);
+                
                     await self.guildRegistry.toggleCloningLock(registeredGuild.id);
                 }
             }
