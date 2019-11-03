@@ -60,20 +60,20 @@ export class ClientChannelManager extends Discord.Client {
         return categoryVoiceChannels.filter(item => item.id !== voiceChannel.id && item.name === voiceChannel.name && item.members.size > 0).pop();
     }
 
-    async injectVoiceChannel(voiceChannel: Discord.VoiceChannel, followingVoiceChannels: string[]) {
+    async injectVoiceChannel(voiceChannel: Discord.VoiceChannel, previousChannels: string[]) {
         const categoryVoiceChannels: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
         const categoryPopulatedVoiceChannels: Discord.VoiceChannel[] = [...categoryVoiceChannels.filter(item => item.members.size > 0)];
 
         const lastVoiceChannelClone: Discord.VoiceChannel = this.getLastVoiceChannelClone(voiceChannel);
 
-        if (this.isLastVoiceChannel(voiceChannel)) {
-            voiceChannel.edit({position: voiceChannel.position + 1});
-        } else if (lastVoiceChannelClone) {
-            voiceChannel.edit({position: lastVoiceChannelClone.position + 1});
-        } else if (categoryPopulatedVoiceChannels.length === 1) {
+        if (categoryPopulatedVoiceChannels.length === 1) {
+            // voiceChannel is the only populated one therfore slides to last position
             voiceChannel.edit({position: categoryVoiceChannels.pop().position + 1});
+        } else if (lastVoiceChannelClone) {
+            // voiceChannel slides beneath its last populated clone
+            voiceChannel.edit({position: lastVoiceChannelClone.position + 1});
         } else {
-            const probe: string = followingVoiceChannels.shift();
+            const probe: string = previousChannels.pop();
             const eligibleVoiceChannels: Discord.VoiceChannel[] = categoryPopulatedVoiceChannels.filter(item => item.name === probe);
 
             if (eligibleVoiceChannels.length > 0) {
@@ -81,22 +81,16 @@ export class ClientChannelManager extends Discord.Client {
 
                 voiceChannel.edit({position: reference.position + 1});
             } else {
-                this.injectVoiceChannel(voiceChannel, followingVoiceChannels);
+                this.injectVoiceChannel(voiceChannel, previousChannels);
             }
         }
     }
 
-    getFollowingVoiceChannels(voiceChannel: Discord.VoiceChannel): string[] {
-        const uniqueChannels: string[] = this.getUniqueChannels(voiceChannel);
-        
-        return uniqueChannels.slice(uniqueChannels.indexOf(voiceChannel.name) + 1);
-    }
-
     moveJoinedChannel(voiceChannel: Discord.VoiceChannel): void {
         const uniqueChannels: string[] = this.getUniqueChannels(voiceChannel);
-        const followingChannels: string[] = uniqueChannels.slice(uniqueChannels.indexOf(voiceChannel.name) + 1);
+        const previousChannels: string[] = uniqueChannels.slice(0, uniqueChannels.indexOf(voiceChannel.name));
         
-        this.injectVoiceChannel(voiceChannel, followingChannels);
+        this.injectVoiceChannel(voiceChannel, previousChannels);
     }
 
     isLastVoiceChannel(voiceChannel: Discord.VoiceChannel): boolean {
