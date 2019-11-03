@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "build": "tsc",
-    "local": "heroku local worker -p 3000",
+    "local": "nodemon --watch dist --exec 'heroku local worker -p 3000' --signal SIGTERM",
     "start": "node ./dist/index.js",
     "test": "echo \"Error: no test specified\" && exit 1",
     "watch": "tsc -w"
@@ -19,8 +19,10 @@
   "author": "Riccardo Bevilacqua <bevilacqua.riccardo@gmail.com>",
   "license": "MIT",
   "devDependencies": {
+    "@discordjs/uws": "^10.149.0",
     "@types/dotenv": "^6.1.1",
     "@types/node": "^12.11.0",
+    "nodemon": "^1.19.4",
     "tslint": "^5.20.0",
     "typescript": "^3.6.4"
   },
