@@ -62,6 +62,7 @@ export class ClientChannelManager extends Discord.Client {
 
     async injectVoiceChannel(voiceChannel: Discord.VoiceChannel, previousChannels: string[]) {
         const categoryVoiceChannels: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
+        const categoryEmptyVoiceChannels: Discord.VoiceChannel[] = [...categoryVoiceChannels.filter(item => item.members.size === 0)];
         const categoryPopulatedVoiceChannels: Discord.VoiceChannel[] = [...categoryVoiceChannels.filter(item => item.members.size > 0)];
 
         const lastVoiceChannelClone: Discord.VoiceChannel = this.getLastVoiceChannelClone(voiceChannel);
@@ -73,15 +74,20 @@ export class ClientChannelManager extends Discord.Client {
             // voiceChannel slides beneath its last populated clone
             voiceChannel.edit({position: lastVoiceChannelClone.position + 1});
         } else {
-            const probe: string = previousChannels.pop();
-            const eligibleVoiceChannels: Discord.VoiceChannel[] = categoryPopulatedVoiceChannels.filter(item => item.name === probe);
-
-            if (eligibleVoiceChannels.length > 0) {
-                const reference: Discord.VoiceChannel = eligibleVoiceChannels.pop();
-
-                voiceChannel.edit({position: reference.position + 1});
+            if (previousChannels.length === 0) {
+                // voiceChannel slides beneath empty channels if no populated previous channel exists
+                voiceChannel.edit({position: categoryEmptyVoiceChannels.pop().position + 1});
             } else {
-                this.injectVoiceChannel(voiceChannel, previousChannels);
+                const probe: string = previousChannels.pop();
+                const eligibleVoiceChannels: Discord.VoiceChannel[] = categoryPopulatedVoiceChannels.filter(item => item.name === probe);
+    
+                if (eligibleVoiceChannels.length > 0) {
+                    // voice channel slides beneath the last clone of a populated previous channel
+                    voiceChannel.edit({position: eligibleVoiceChannels.pop().position + 1});
+                } else {
+                    // recursed call to this method
+                    this.injectVoiceChannel(voiceChannel, previousChannels);
+                }
             }
         }
     }
