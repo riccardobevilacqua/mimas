@@ -68,7 +68,7 @@ export class ClientChannelManager extends Discord.Client {
         const lastVoiceChannelClone: Discord.VoiceChannel = this.getLastVoiceChannelClone(voiceChannel);
 
         if (categoryPopulatedVoiceChannels.length === 1) {
-            // voiceChannel is the only populated one therfore slides to last position
+            // voiceChannel is the only populated one therefore slides to last position
             voiceChannel.edit({position: categoryVoiceChannels.pop().position + 1});
         } else if (lastVoiceChannelClone) {
             // voiceChannel slides beneath its last populated clone
