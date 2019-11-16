@@ -73,21 +73,19 @@ export class ClientChannelManager extends Discord.Client {
         } else if (lastVoiceChannelClone) {
             // voiceChannel slides beneath its last populated clone
             voiceChannel.edit({position: lastVoiceChannelClone.position + 1});
-        } else {
-            if (previousChannels.length === 0) {
+        } else if (previousChannels.length === 0) {
                 // voiceChannel slides beneath empty channels if no populated previous channel exists
                 voiceChannel.edit({position: categoryEmptyVoiceChannels.pop().position + 1});
+        } else {
+            const probe: string = previousChannels.pop();
+            const eligibleVoiceChannels: Discord.VoiceChannel[] = categoryPopulatedVoiceChannels.filter(item => item.name === probe);
+
+            if (eligibleVoiceChannels.length > 0) {
+                // voice channel slides beneath the last clone of a populated previous channel
+                voiceChannel.edit({position: eligibleVoiceChannels.pop().position + 1});
             } else {
-                const probe: string = previousChannels.pop();
-                const eligibleVoiceChannels: Discord.VoiceChannel[] = categoryPopulatedVoiceChannels.filter(item => item.name === probe);
-    
-                if (eligibleVoiceChannels.length > 0) {
-                    // voice channel slides beneath the last clone of a populated previous channel
-                    voiceChannel.edit({position: eligibleVoiceChannels.pop().position + 1});
-                } else {
-                    // recursed call to this method
-                    this.injectVoiceChannel(voiceChannel, previousChannels);
-                }
+                // recursed call to this method
+                this.injectVoiceChannel(voiceChannel, previousChannels);
             }
         }
     }
@@ -129,7 +127,7 @@ export class ClientChannelManager extends Discord.Client {
                         parent: voiceChannel.parentID
                     }).catch(error => console.log(error));
     
-                    self.moveJoinedChannel(voiceChannel);
+                    await self.moveJoinedChannel(voiceChannel);
                 
                     await self.guildRegistry.toggleCloningLock(registeredGuild.id);
                 }
