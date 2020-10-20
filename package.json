@@ -1,6 +1,6 @@
 {
   "name": "discord-bot-mimas",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "A discord bot to manage automatically voice channels",
   "main": "dist/index.js",
   "scripts": {
