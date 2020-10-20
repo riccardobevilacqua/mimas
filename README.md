@@ -4,15 +4,9 @@ A discord bot to manage automatically voice channels.
 
 ## Features
 
-Mimas can:
+Mimas will keep your Discord server tidy and clean, giving your community a neat user experience.
 
-- dynamically create new voice channels
-- dynamically remove unnecessary voice channels
-- keep your voice channels sorted as you designed
-
-See it in action!
-
-![Mimas in action](./img/mimas-in-action.gif)
+Channels will be automatically created.
 
 At any given time there will be an empty voice channel available, distinct by name.
 
@@ -22,8 +16,9 @@ Your user will easily find their friends or create seamlessly new channels thank
 
 Unnecessary channels will be removed automatically.
 
-Mimas will keep your Discord server tidy and clean, giving your community a neat user experience.
+See it in action!
 
+![Mimas in action](./img/mimas-in-action.gif)
 
 ## Add Mimas to your Discord
 
@@ -40,8 +35,8 @@ Grant Mimas the following permissions in any category you desire:
 
 ## Built With
 
-* [TypeScript](https://www.typescriptlang.org/)
-* [Discord.js](https://discord.js.org/)
+- [TypeScript](https://www.typescriptlang.org/)
+- [Discord.js](https://discord.js.org/)
 
 ## License
 
@@ -49,9 +44,9 @@ This project is licensed under the MIT License - see the [LICENSE.md](LICENSE.md
 
 ## Thanks to
 
-* [Discord](https://discordapp.com/) staff for providing public APIs
-* [Discord.js](https://discord.js.org/) for providing a JS framework
-* [DeadElle](https://github.com/deadelle) for inspiration, product suggestions, and invaluable testing
+- [Discord](https://discordapp.com/) staff for providing public APIs
+- [Discord.js](https://discord.js.org/) for providing a JS framework
+- [DeadElle](https://github.com/deadelle) for inspiration, product suggestions, and invaluable testing
 
 ## Help
 
