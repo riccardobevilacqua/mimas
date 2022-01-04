@@ -19,15 +19,16 @@
   "author": "Riccardo Bevilacqua <bevilacqua.riccardo@gmail.com>",
   "license": "MIT",
   "devDependencies": {
-    "@discordjs/uws": "^10.149.0",
-    "@types/dotenv": "^6.1.1",
-    "@types/node": "^12.11.0",
-    "nodemon": "^2.0.6",
-    "tslint": "^5.20.0",
-    "typescript": "^3.6.4"
+    "@typescript-eslint/eslint-plugin": "5.9.0",
+    "@typescript-eslint/parser": "5.9.0",
+    "eslint": "8.6.0",
+    "nodemon": "2.0.15",
+    "typescript": "4.5.4"
   },
   "dependencies": {
-    "discord.js": "^11.5.1",
-    "dotenv": "^8.1.0"
+    "@discordjs/rest": "0.2.0-canary.0",
+    "discord-api-types": "0.26.1",
+    "discord.js": "13.5.0",
+    "dotenv": "10.0.0"
   }
 }
