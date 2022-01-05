@@ -1,11 +1,13 @@
 import * as Discord from 'discord.js';
 import { GuildRegistry, IGuildInfo } from './guildRegistry';
 
+export type VoiceChannelCollection = Discord.Collection<string, Discord.VoiceChannel>
+
 export class ClientChannelManager extends Discord.Client {
     private guildRegistry: GuildRegistry = new GuildRegistry()
 
-    getVoiceChannelClones(originalChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.VoiceChannel> {
-        return <Discord.Collection<string, Discord.VoiceChannel>>originalChannel.guild.channels.cache
+    getVoiceChannelClones(originalChannel: Discord.VoiceChannel): VoiceChannelCollection {
+        return <VoiceChannelCollection>originalChannel.guild.channels.cache
             .filter(item => {
                 return item.type === 'GUILD_VOICE' 
                     && item.name === originalChannel.name 
@@ -14,7 +16,7 @@ export class ClientChannelManager extends Discord.Client {
             });
     }
 
-    getEmptyVoiceChannelClones(voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildBasedChannel> {
+    getEmptyVoiceChannelClones(voiceChannel: Discord.VoiceChannel): VoiceChannelCollection {
         return this.getVoiceChannelClones(voiceChannel).filter(item => item.members.size === 0);
     }
 
@@ -39,10 +41,9 @@ export class ClientChannelManager extends Discord.Client {
         return 0;
     }
 
-    getCategoryVoiceChannels(channel: Discord.VoiceChannel): Discord.VoiceChannel[] {
-        return <Discord.VoiceChannel[]>channel.parent.children
-            .array()
-            .filter(guildChannel => guildChannel.type === 'voice')
+    getCategoryVoiceChannels(channel: Discord.VoiceChannel): VoiceChannelCollection {
+        return <VoiceChannelCollection>channel.parent.children
+            .filter(guildChannel => guildChannel.type === 'GUILD_VOICE')
             .sort(this.comparePosition);
     }
 
@@ -54,9 +55,11 @@ export class ClientChannelManager extends Discord.Client {
     }
 
     getLastVoiceChannelClone(voiceChannel: Discord.VoiceChannel): Discord.VoiceChannel {
-        const categoryVoiceChannels: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
-
-        return categoryVoiceChannels.filter(item => item.id !== voiceChannel.id && item.name === voiceChannel.name && item.members.size > 0).pop();
+        return this.getCategoryVoiceChannels(voiceChannel)
+            .filter(item => item.id !== voiceChannel.id 
+                && item.name === voiceChannel.name 
+                && item.members.size > 0)
+            .last()
     }
 
     async injectVoiceChannel(voiceChannel: Discord.VoiceChannel, previousChannels: string[]) {
