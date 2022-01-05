@@ -6,7 +6,12 @@ import { ClientChannelManager } from './clientChannelManager';
 Dotenv.config();
 Http.createServer().listen(3000);
 
-const client: ClientChannelManager = new ClientChannelManager({ intents: [Discord.Intents.FLAGS.GUILDS] });
+const intents = [
+    Discord.Intents.FLAGS.GUILDS,
+    Discord.Intents.FLAGS.GUILD_VOICE_STATES
+]
+
+const client: ClientChannelManager = new ClientChannelManager({ intents });
 
 client.on('voiceStateUpdate', (oldState: Discord.VoiceState, newState: Discord.VoiceState) => {
     try {
