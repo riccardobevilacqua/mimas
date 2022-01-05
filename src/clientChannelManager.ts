@@ -4,21 +4,20 @@ import { GuildRegistry, IGuildInfo } from './guildRegistry';
 export class ClientChannelManager extends Discord.Client {
     private guildRegistry: GuildRegistry = new GuildRegistry()
 
-    getVoiceChannelClones(originalChannel: Discord.VoiceChannel): Discord.VoiceChannel[] {
-        return <Discord.VoiceChannel[]>originalChannel.guild.channels
+    getVoiceChannelClones(originalChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.VoiceChannel> {
+        return <Discord.Collection<string, Discord.VoiceChannel>>originalChannel.guild.channels.cache
             .filter(item => {
-                return item.type === 'voice' 
+                return item.type === 'GUILD_VOICE' 
                     && item.name === originalChannel.name 
                     && item.id !== originalChannel.id 
-                    && item.parentID === originalChannel.parentID
-            })
-            .array();
+                    && item.parentId === originalChannel.parentId
+            });
     }
-    
-    getEmptyVoiceChannelClones(voiceChannel: Discord.VoiceChannel): Discord.VoiceChannel[] {
+
+    getEmptyVoiceChannelClones(voiceChannel: Discord.VoiceChannel): Discord.Collection<string, Discord.GuildBasedChannel> {
         return this.getVoiceChannelClones(voiceChannel).filter(item => item.members.size === 0);
     }
-    
+
     hasPermissions(voiceChannel: Discord.VoiceChannel): boolean {
         const categoryPermissions: Readonly<Discord.Permissions> = voiceChannel.parent.permissionsFor(this.user);
         const channelPermissions: Readonly<Discord.Permissions> = voiceChannel.permissionsFor(this.user);
@@ -26,7 +25,7 @@ export class ClientChannelManager extends Discord.Client {
         if (categoryPermissions.has('MANAGE_CHANNELS') && channelPermissions.has('VIEW_CHANNEL')) {
             return true;
         }
-    
+
         return false;
     }
 
