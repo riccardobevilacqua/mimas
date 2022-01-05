@@ -63,28 +63,28 @@ export class ClientChannelManager extends Discord.Client {
     }
 
     async injectVoiceChannel(voiceChannel: Discord.VoiceChannel, previousChannels: string[]) {
-        const categoryVoiceChannels: Discord.VoiceChannel[] = [...this.getCategoryVoiceChannels(voiceChannel)];
-        const categoryEmptyVoiceChannels: Discord.VoiceChannel[] = [...categoryVoiceChannels.filter(item => item.members.size === 0)];
-        const categoryPopulatedVoiceChannels: Discord.VoiceChannel[] = [...categoryVoiceChannels.filter(item => item.members.size > 0)];
+        const categoryVoiceChannels: VoiceChannelCollection = new Discord.Collection(this.getCategoryVoiceChannels(voiceChannel));
+        const categoryEmptyVoiceChannels: VoiceChannelCollection = new Discord.Collection(categoryVoiceChannels.filter(item => item.members.size === 0));
+        const categoryPopulatedVoiceChannels: VoiceChannelCollection = new Discord.Collection(categoryVoiceChannels.filter(item => item.members.size > 0));
 
         const lastVoiceChannelClone: Discord.VoiceChannel = this.getLastVoiceChannelClone(voiceChannel);
 
-        if (categoryPopulatedVoiceChannels.length === 1) {
+        if (categoryPopulatedVoiceChannels.size === 1) {
             // voiceChannel is the only populated one therefore slides to last position
-            voiceChannel.edit({position: categoryVoiceChannels.pop().position + 1});
+            voiceChannel.edit({position: categoryVoiceChannels.last().position + 1});
         } else if (lastVoiceChannelClone) {
             // voiceChannel slides beneath its last populated clone
             voiceChannel.edit({position: lastVoiceChannelClone.position + 1});
         } else if (previousChannels.length === 0) {
                 // voiceChannel slides beneath empty channels if no populated previous channel exists
-                voiceChannel.edit({position: categoryEmptyVoiceChannels.pop().position + 1});
+                voiceChannel.edit({position: categoryEmptyVoiceChannels.last().position + 1});
         } else {
             const probe: string = previousChannels.pop();
-            const eligibleVoiceChannels: Discord.VoiceChannel[] = categoryPopulatedVoiceChannels.filter(item => item.name === probe);
+            const eligibleVoiceChannels: VoiceChannelCollection = categoryPopulatedVoiceChannels.filter(item => item.name === probe);
 
-            if (eligibleVoiceChannels.length > 0) {
+            if (eligibleVoiceChannels.size > 0) {
                 // voice channel slides beneath the last clone of a populated previous channel
-                voiceChannel.edit({position: eligibleVoiceChannels.pop().position + 1});
+                voiceChannel.edit({position: eligibleVoiceChannels.last().position + 1});
             } else {
                 // recursed call to this method
                 this.injectVoiceChannel(voiceChannel, previousChannels);
@@ -100,9 +100,9 @@ export class ClientChannelManager extends Discord.Client {
     }
 
     isLastVoiceChannel(voiceChannel: Discord.VoiceChannel): boolean {
-        const channelsList: Discord.VoiceChannel[] = this.getCategoryVoiceChannels(voiceChannel);
+        const channelsList: VoiceChannelCollection = this.getCategoryVoiceChannels(voiceChannel);
 
-        if (channelsList && channelsList.length > 0 && voiceChannel && voiceChannel.position === channelsList[channelsList.length - 1].position) {
+        if (channelsList?.size > 0 && voiceChannel?.position === channelsList.last().position) {
             return true;
         }
 
@@ -118,20 +118,19 @@ export class ClientChannelManager extends Discord.Client {
                 const registeredGuild: IGuildInfo = self.guildRegistry.findGuild(voiceChannel.guild.id);
                     
                 if (voiceChannel.members.size > 0 
-                    && self.getEmptyVoiceChannelClones(voiceChannel).length < 1 
+                    && self.getEmptyVoiceChannelClones(voiceChannel).size < 1 
                     && !registeredGuild.cloningLock) {
                     self.guildRegistry.toggleCloningLock(registeredGuild.id);
 
-                    await voiceChannel.guild.createChannel(voiceChannel.name, {
-                        type: 'voice',
+                    await voiceChannel.parent.createChannel(voiceChannel.name, {
+                        type: 'GUILD_VOICE',
                         position: voiceChannel.position,
-                        userLimit: voiceChannel.userLimit,
-                        parent: voiceChannel.parentID
+                        userLimit: voiceChannel.userLimit
                     }).catch(error => console.log(error));
-    
-                    await self.moveJoinedChannel(voiceChannel);
+
+                    self.moveJoinedChannel(voiceChannel);
                 
-                    await self.guildRegistry.toggleCloningLock(registeredGuild.id);
+                    self.guildRegistry.toggleCloningLock(registeredGuild.id);
                 }
             }
         } catch (error) {
@@ -139,11 +138,11 @@ export class ClientChannelManager extends Discord.Client {
         }
     }
 
-    removeCloneVoiceChannel(voiceChannel: Discord.VoiceChannel): void {
+    removeCloneVoiceChannel(voiceChannel: Discord.VoiceChannel) {
         try {
             if (voiceChannel 
                 && voiceChannel.members.size === 0 
-                && this.getEmptyVoiceChannelClones(voiceChannel).length > 0) {
+                && this.getEmptyVoiceChannelClones(voiceChannel).size > 0) {
                 voiceChannel.delete();
             }
         } catch(error) {
