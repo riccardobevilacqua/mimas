@@ -122,11 +122,7 @@ export class ClientChannelManager extends Discord.Client {
                     && !registeredGuild.cloningLock) {
                     self.guildRegistry.toggleCloningLock(registeredGuild.id);
 
-                    await voiceChannel.parent.createChannel(voiceChannel.name, {
-                        type: 'GUILD_VOICE',
-                        position: voiceChannel.position,
-                        userLimit: voiceChannel.userLimit
-                    }).catch(error => console.log(error));
+                    await voiceChannel.parent.createChannel(voiceChannel.name).catch(error => console.log(error));
 
                     self.moveJoinedChannel(voiceChannel);
                 
