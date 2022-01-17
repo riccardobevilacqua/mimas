@@ -22,7 +22,7 @@ See it in action!
 
 ## Add Mimas to your Discord
 
-[Invite Mimas to your Discord](https://discordapp.com/oauth2/authorize?client_id=500602853098782752&scope=bot&permissions=1024) and follow the instructions.
+[Invite Mimas to your Discord](https://discord.com/oauth2/authorize?client_id=500602853098782752&scope=bot&permissions=1040) and follow the instructions.
 
 You'll be asked to select your Discord server and grant Mimas **Read Messages** permissions.
 
